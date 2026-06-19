@@ -1,98 +1,696 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  Dimensions,
+  Platform,
+  Alert,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StatusBar } from 'expo-status-bar';
+import { useFocusEffect } from 'expo-router';
+import { Colors } from '@/constants/theme';
+import { useTheme } from '@/context/theme-context';
+import { useLanguage } from '@/context/language-context';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const { width } = Dimensions.get('window');
+
+interface UserData {
+  cigarettesPerDay: number;
+  yearsSmoked: number;
+  pricePerPack: number;
+  quitDate: string;
+}
+
+const STORAGE_KEY = '@BreatheFree:userData';
+
+const MOTIVATIONAL_QUOTES = [
+  "Mỗi giây phút bạn không hút thuốc là một chiến thắng cho phổi của bạn.",
+  "Tiền tiết kiệm được hôm nay sẽ xây dựng tương lai ngày mai.",
+  "Hít một hơi thật sâu. Không khí trong lành này thuộc về bạn.",
+  "Bạn mạnh mẽ hơn cơn thèm thuốc. Cơn thèm chỉ kéo dài từ 3-5 phút thôi!",
+  "Gia đình và người thân yêu đang tự hào về quyết tâm của bạn.",
+  "Hãy trân trọng sức khỏe của chính mình. Bạn xứng đáng có một cuộc sống lành mạnh.",
+  "Mỗi điếu thuốc bị từ chối là một bước tiến gần hơn đến tự do.",
+];
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const { activeScheme } = useTheme();
+  const { language, t } = useLanguage();
+  const themeColors = Colors[activeScheme];
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const [isLoading, setIsLoading] = useState(true);
+  const [userData, setUserData] = useState<UserData | null>(null);
+
+  // Form states
+  const [cigarettesInput, setCigarettesInput] = useState('10');
+  const [yearsInput, setYearsInput] = useState('5');
+  const [priceInput, setPriceInput] = useState('30000');
+  const [quitTimeOffset, setQuitTimeOffset] = useState<'now' | '1h' | '3h' | '1d' | '3d'>('now');
+
+  // Real-time counter states
+  const [timeElapsed, setTimeElapsed] = useState({ d: 0, h: 0, m: 0, s: 0 });
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
+  // Fetch data on focus
+  useFocusEffect(
+    useCallback(() => {
+      loadUserData();
+    }, [])
+  );
+
+  // Rotate quote every 15 seconds
+  useEffect(() => {
+    const quoteInterval = setInterval(() => {
+      setQuoteIndex((prev) => (prev + 1) % MOTIVATIONAL_QUOTES.length);
+    }, 15000);
+    return () => clearInterval(quoteInterval);
+  }, []);
+
+  // Update counter every second
+  useEffect(() => {
+    if (!userData) return;
+
+    const updateCounter = () => {
+      const quitTime = new Date(userData.quitDate).getTime();
+      const now = Date.now();
+      const diffMs = now - quitTime;
+
+      if (diffMs < 0) {
+        setTimeElapsed({ d: 0, h: 0, m: 0, s: 0 });
+        return;
+      }
+
+      const diffSecs = Math.floor(diffMs / 1000);
+      const d = Math.floor(diffSecs / (3600 * 24));
+      const h = Math.floor((diffSecs % (3600 * 24)) / 3600);
+      const m = Math.floor((diffSecs % 3600) / 60);
+      const s = diffSecs % 60;
+
+      setTimeElapsed({ d, h, m, s });
+    };
+
+    updateCounter();
+    const counterInterval = setInterval(updateCounter, 1000);
+    return () => clearInterval(counterInterval);
+  }, [userData]);
+
+  const loadUserData = async () => {
+    try {
+      setIsLoading(true);
+      const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
+      if (jsonValue != null) {
+        setUserData(JSON.parse(jsonValue));
+      }
+    } catch (e) {
+      console.error('Failed to load user data', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveSetup = async () => {
+    const cigs = parseInt(cigarettesInput, 10);
+    const years = parseInt(yearsInput, 10);
+    const price = parseInt(priceInput, 10);
+
+    if (isNaN(cigs) || cigs <= 0) {
+      Alert.alert('Lỗi', 'Vui lòng nhập số điếu thuốc hợp lệ.');
+      return;
+    }
+    if (isNaN(years) || years < 0) {
+      Alert.alert('Lỗi', 'Vui lòng nhập số năm hợp lệ.');
+      return;
+    }
+    if (isNaN(price) || price <= 0) {
+      Alert.alert('Lỗi', 'Vui lòng nhập giá tiền hợp lệ.');
+      return;
+    }
+
+    // Calculate quit date based on offset choice
+    const date = new Date();
+    if (quitTimeOffset === '1h') date.setHours(date.getHours() - 1);
+    else if (quitTimeOffset === '3h') date.setHours(date.getHours() - 3);
+    else if (quitTimeOffset === '1d') date.setDate(date.getDate() - 1);
+    else if (quitTimeOffset === '3d') date.setDate(date.getDate() - 3);
+
+    const newUserData: UserData = {
+      cigarettesPerDay: cigs,
+      yearsSmoked: years,
+      pricePerPack: price,
+      quitDate: date.toISOString(),
+    };
+
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newUserData));
+      setUserData(newUserData);
+    } catch (e) {
+      console.error('Failed to save user data', e);
+      Alert.alert('Lỗi', 'Không thể lưu dữ liệu thiết lập.');
+    } finally {
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: themeColors.background }]}>
+        <ActivityIndicator size="large" color={themeColors.tint} />
+      </View>
+    );
+  }
+
+  // ONBOARDING SCREEN
+  if (!userData) {
+    return (
+      <ScrollView
+        contentContainerStyle={[styles.scrollContainer, { backgroundColor: themeColors.background }]}
+        keyboardShouldPersistTaps="handled"
+      >
+        <StatusBar style={activeScheme === 'dark' ? 'light' : 'dark'} />
+        <View style={styles.onboardingHeader}>
+          <Text style={[styles.appTitle, { color: themeColors.tint }]}>{t('home.brand')}</Text>
+          <Text style={[styles.appSub, { color: themeColors.muted }]}>
+            Bắt đầu hành trình sống khỏe, trong lành không khói thuốc
+          </Text>
+        </View>
+
+        <View style={[styles.setupCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <Text style={[styles.setupTitle, { color: themeColors.text }]}>{t('home.setupTitle')}</Text>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: themeColors.text }]}>
+              {t('home.setupCigarettes')}
+            </Text>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={[styles.textInput, { color: themeColors.text, borderColor: themeColors.border, backgroundColor: themeColors.background }]}
+                keyboardType="numeric"
+                value={cigarettesInput}
+                onChangeText={setCigarettesInput}
+              />
+              <Text style={[styles.inputUnit, { color: themeColors.muted }]}>{t('home.cigarettes')}</Text>
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: themeColors.text }]}>
+              {t('home.setupYears')}
+            </Text>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={[styles.textInput, { color: themeColors.text, borderColor: themeColors.border, backgroundColor: themeColors.background }]}
+                keyboardType="numeric"
+                value={yearsInput}
+                onChangeText={setYearsInput}
+              />
+              <Text style={[styles.inputUnit, { color: themeColors.muted }]}>{t('home.days')}</Text>
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: themeColors.text }]}>
+              {t('home.setupPrice')}
+            </Text>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={[styles.textInput, { color: themeColors.text, borderColor: themeColors.border, backgroundColor: themeColors.background }]}
+                keyboardType="numeric"
+                value={priceInput}
+                onChangeText={setPriceInput}
+              />
+              <Text style={[styles.inputUnit, { color: themeColors.muted }]}>đ</Text>
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: themeColors.text }]}>
+              {t('home.setupQuitTime')}
+            </Text>
+            <View style={styles.offsetOptions}>
+              {[
+                { label: t('home.setupNow'), value: 'now' },
+                { label: t('home.setup1h'), value: '1h' },
+                { label: t('home.setup3h'), value: '3h' },
+                { label: t('home.setup1d'), value: '1d' },
+                { label: t('home.setup3d'), value: '3d' },
+              ].map((opt) => (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={[
+                    styles.offsetBtn,
+                    {
+                      borderColor: themeColors.border,
+                      backgroundColor: quitTimeOffset === opt.value ? themeColors.tint : themeColors.background,
+                    },
+                  ]}
+                  onPress={() => setQuitTimeOffset(opt.value as any)}
+                >
+                  <Text
+                    style={[
+                      styles.offsetBtnText,
+                      {
+                        color: quitTimeOffset === opt.value ? '#FFF' : themeColors.text,
+                        fontWeight: quitTimeOffset === opt.value ? '700' : '400',
+                      },
+                    ]}
+                  >
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.primaryButton, { backgroundColor: themeColors.tint }]}
+            onPress={handleSaveSetup}
+          >
+            <Text style={styles.primaryButtonText}>{t('home.setupStart')}</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    );
+  }
+
+  // DASHBOARD SCREEN
+  // Calculations
+  const quitDateObj = new Date(userData.quitDate);
+  const diffMs = Date.now() - quitDateObj.getTime();
+  const daysQuit = Math.max(0, diffMs / (1000 * 60 * 60 * 24));
+  const cigarettesAvoided = Math.max(0, Math.floor(daysQuit * userData.cigarettesPerDay));
+  const moneySaved = Math.max(0, Math.floor(daysQuit * (userData.cigarettesPerDay / 20) * userData.pricePerPack));
+  const lifeRegainedMinutes = cigarettesAvoided * 11;
+
+  const formatLifeRegained = (mins: number) => {
+    if (mins < 60) return `${mins} ${t('home.minutes')}`;
+    const hrs = Math.floor(mins / 60);
+    const remainingMins = mins % 60;
+    if (hrs < 24) return `${hrs} ${t('home.hours')} ${remainingMins} ${t('home.minutes')}`;
+    const days = Math.floor(hrs / 24);
+    const remainingHrs = hrs % 24;
+    return `${days} ${t('home.days')} ${remainingHrs} ${t('home.hours')}`;
+  };
+
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US', { style: 'currency', currency: language === 'vi' ? 'VND' : 'USD' })
+      .format(val);
+  };
+
+  return (
+    <View style={[styles.mainContainer, { backgroundColor: themeColors.background }]}>
+      <StatusBar style={activeScheme === 'dark' ? 'light' : 'dark'} />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={[styles.welcomeText, { color: themeColors.muted }]}>{t('home.welcome')}</Text>
+          <Text style={[styles.dashboardBrand, { color: themeColors.text }]}>{t('home.brand')}</Text>
+        </View>
+        <View style={[styles.avatarCircle, { backgroundColor: themeColors.tint + '20' }]}>
+          <IconSymbol size={24} name="leaf.fill" color={themeColors.tint} />
+        </View>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.dashboardScroll}
+        showsVerticalScrollIndicator={false}
+      >
+
+      {/* Counter Card */}
+      <View style={[styles.counterCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+        <Text style={styles.counterHeader}>{t('home.timerHeader')}</Text>
+        <View style={styles.timerGrid}>
+          <View style={styles.timerBlock}>
+            <Text style={[styles.timerNum, { color: themeColors.tint }]}>{timeElapsed.d}</Text>
+            <Text style={[styles.timerLabel, { color: themeColors.muted }]}>{t('home.days')}</Text>
+          </View>
+          <View style={styles.timerSeparator}>
+            <Text style={[styles.timerSepText, { color: themeColors.tint }]}>:</Text>
+          </View>
+          <View style={styles.timerBlock}>
+            <Text style={[styles.timerNum, { color: themeColors.tint }]}>{timeElapsed.h}</Text>
+            <Text style={[styles.timerLabel, { color: themeColors.muted }]}>{t('home.hours')}</Text>
+          </View>
+          <View style={styles.timerSeparator}>
+            <Text style={[styles.timerSepText, { color: themeColors.tint }]}>:</Text>
+          </View>
+          <View style={styles.timerBlock}>
+            <Text style={[styles.timerNum, { color: themeColors.tint }]}>{timeElapsed.m}</Text>
+            <Text style={[styles.timerLabel, { color: themeColors.muted }]}>{t('home.minutes')}</Text>
+          </View>
+          <View style={styles.timerSeparator}>
+            <Text style={[styles.timerSepText, { color: themeColors.tint }]}>:</Text>
+          </View>
+          <View style={styles.timerBlock}>
+            <Text style={[styles.timerNum, { color: themeColors.tint }]}>{timeElapsed.s}</Text>
+            <Text style={[styles.timerLabel, { color: themeColors.muted }]}>{t('home.seconds')}</Text>
+          </View>
+        </View>
+        <View style={[styles.quitBadge, { backgroundColor: themeColors.tint + '15' }]}>
+          <Text style={[styles.quitBadgeText, { color: themeColors.tint }]}>
+            {t('home.startDate')} {quitDateObj.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US')} {quitDateObj.toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+          </Text>
+        </View>
+      </View>
+
+      {/* Grid Stats */}
+      <View style={styles.statsGrid}>
+        {/* Stat 1: Money saved */}
+        <View style={[styles.statBox, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <View style={[styles.statIconCircle, { backgroundColor: '#10B98120' }]}>
+            <IconSymbol size={20} name="house.fill" color="#10B981" />
+          </View>
+          <Text style={[styles.statValue, { color: themeColors.text }]}>
+            {formatCurrency(moneySaved)}
+          </Text>
+          <Text style={[styles.statLabel, { color: themeColors.muted }]}>{t('home.moneySaved')}</Text>
+        </View>
+
+        {/* Stat 2: Cigarettes avoided */}
+        <View style={[styles.statBox, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <View style={[styles.statIconCircle, { backgroundColor: '#F59E0B20' }]}>
+            <IconSymbol size={20} name="heart.fill" color="#F59E0B" />
+          </View>
+          <Text style={[styles.statValue, { color: themeColors.text }]}>
+            {cigarettesAvoided} {t('home.cigarettes')}
+          </Text>
+          <Text style={[styles.statLabel, { color: themeColors.muted }]}>{t('home.cigarettesAvoided')}</Text>
+        </View>
+      </View>
+
+      {/* Large Stat Box: Life Regained */}
+      <View style={[styles.largeStatCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+        <View style={[styles.statIconCircle, { backgroundColor: '#0EA5E920' }]}>
+          <IconSymbol size={22} name="heart.fill" color="#0EA5E9" />
+        </View>
+        <View style={styles.largeStatInfo}>
+          <Text style={[styles.largeStatValue, { color: themeColors.text }]}>
+            +{formatLifeRegained(lifeRegainedMinutes)}
+          </Text>
+          <Text style={[styles.largeStatLabel, { color: themeColors.muted }]}>
+            {t('home.lifeRegainedDesc')}
+          </Text>
+        </View>
+      </View>
+
+      {/* Tips / Info Banner */}
+      <View style={[styles.tipsCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+        <View style={styles.tipHeader}>
+          <IconSymbol size={20} name="heart.fill" color={themeColors.tint} />
+          <Text style={[styles.tipTitle, { color: themeColors.text }]}>{t('home.tipsTitle')}</Text>
+        </View>
+        <Text style={[styles.tipBody, { color: themeColors.muted }]}>
+          {t('home.tipsBody')}
+        </Text>
+      </View>
+    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollContainer: {
+    padding: 24,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 30,
+    minHeight: '100%',
+  },
+  dashboardContainer: {
+    padding: 20,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 30,
+  },
+  onboardingHeader: {
+    marginBottom: 28,
+    alignItems: 'center',
+  },
+  appTitle: {
+    fontSize: 32,
+    fontWeight: '900',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  appSub: {
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
+    paddingHorizontal: 12,
+  },
+  setupCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 24,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+  },
+  setupTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  textInput: {
+    flex: 1,
+    height: 52,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  inputUnit: {
+    position: 'absolute',
+    right: 16,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  offsetOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+  },
+  offsetBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  offsetBtnText: {
+    fontSize: 13,
+  },
+  primaryButton: {
+    height: 54,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  primaryButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  mainContainer: {
+    flex: 1,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+  },
+  dashboardScroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+    paddingHorizontal: 20,
+  },
+  welcomeText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  dashboardBrand: {
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  avatarCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  counterCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+  },
+  counterHeader: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    color: '#94A3B8',
+    marginBottom: 16,
+  },
+  timerGrid: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  timerBlock: {
+    alignItems: 'center',
+    minWidth: 54,
+  },
+  timerNum: {
+    fontSize: 32,
+    fontWeight: '800',
+  },
+  timerLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 2,
+    textTransform: 'uppercase',
+  },
+  timerSeparator: {
+    paddingHorizontal: 4,
+    paddingBottom: 14,
+  },
+  timerSepText: {
+    fontSize: 28,
+    fontWeight: '800',
+  },
+  quitBadge: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  quitBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 16,
+  },
+  statBox: {
+    flex: 1,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16,
+  },
+  statIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  statValue: {
+    fontSize: 17,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  largeStatCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 20,
+  },
+  largeStatInfo: {
+    marginLeft: 14,
+    flex: 1,
+  },
+  largeStatValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  largeStatLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 16,
+  },
+  quoteCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 18,
+    marginBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  quoteIcon: {
+    marginRight: 12,
+  },
+  quoteText: {
+    flex: 1,
+    fontSize: 13,
+    fontStyle: 'italic',
+    lineHeight: 18,
+    fontWeight: '600',
+  },
+  tipsCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 18,
+    marginBottom: 10,
+  },
+  tipHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginBottom: 10,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  tipTitle: {
+    fontSize: 15,
+    fontWeight: '700',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  tipBody: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '500',
   },
 });
