@@ -233,7 +233,11 @@ export default function ProfileScreen() {
           <Text style={[styles.cardTitle, { color: themeColors.text }]}>{t('profile.badgesTitle')}</Text>
           <View style={styles.badgesContainer}>
             {badges.map((badge) => (
-              <View key={badge.id} style={styles.badgeWrapper}>
+              <TouchableOpacity
+                key={badge.id}
+                style={styles.badgeWrapper}
+                onLongPress={() => Alert.alert(badge.title, badge.desc)}
+              >
                 <View
                   style={[
                     styles.badgeItem,
@@ -243,23 +247,7 @@ export default function ProfileScreen() {
                     },
                   ]}
                 >
-                  {/* Khối trên: số ngày làm nền + icon canh giữa chính xác */}
                   <View style={styles.badgeIconStack}>
-                    <Text
-                      style={[
-                        styles.badgeDaysBackground,
-                        {
-                          fontSize: String(badge.daysRequired).length > 1 ? 70 : 110,
-                          lineHeight: String(badge.daysRequired).length > 1 ? 88 : 110,
-                          color: badge.earned
-                            ? themeColors.tint
-                            : themeColors.muted + '40',
-                        },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {badge.daysRequired}
-                    </Text>
                     <View style={styles.badgeIconWrap} pointerEvents="none">
                       <IconSymbol
                         size={60}
@@ -270,7 +258,6 @@ export default function ProfileScreen() {
                   </View>
                 </View>
 
-                {/* Tên huy hiệu nằm hẳn bên ngoài, dưới card */}
                 <Text
                   style={[
                     styles.badgeTitle,
@@ -279,7 +266,7 @@ export default function ProfileScreen() {
                 >
                   {badge.title}
                 </Text>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         </View>
@@ -579,11 +566,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-  },
-  badgeDaysBackground: {
-    fontFamily: 'Kalam_700Bold',
-    textAlign: 'center',
-    includeFontPadding: false,
   },
   badgeIconWrap: {
     position: 'absolute',

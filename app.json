@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "stopsmoking",
-    "slug": "stopsmoking",
+    "name": "Breathe Free - Stop Smoking",
+    "slug": "breathe-free-stop-smoking",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "stopsmoking",
+    "icon": "./assets/images/breathfree.png",
+    "scheme": "breathefree",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.giakiet.stopsmoking"
+      "package": "com.giakiet.breathefree",
     },
     "web": {
       "output": "static",
