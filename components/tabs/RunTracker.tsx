@@ -106,10 +106,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 12,
   },
   mainDisplay: {
     alignItems: 'center',

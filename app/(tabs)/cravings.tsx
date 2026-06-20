@@ -148,6 +148,13 @@ export default function CravingsScreen() {
     }
   };
 
+  const handleDeleteRun = (id: string) => {
+  const updated = runHistory.filter((item) => item.id !== id);
+  AsyncStorage.setItem(STORAGE_KEY_RUNS, JSON.stringify(updated))
+    .then(() => setRunHistory(updated))
+    .catch((e) => console.error(e));
+};
+
   const handleDeleteLog = (id: string) => {
     Alert.alert(
       t('cravings.deleteAlertTitle'),
@@ -414,7 +421,7 @@ export default function CravingsScreen() {
           {/* Running Tracker Page */}
           <View>
             <RunTracker themeColors={themeColors} onStop={saveRunSession} />
-            <RunningHistory themeColors={themeColors} history={runHistory} />
+            <RunningHistory themeColors={themeColors} history={runHistory} onDelete={handleDeleteRun}/>
           </View>
         </RunBreatheCarousel>
       </ScrollView>
