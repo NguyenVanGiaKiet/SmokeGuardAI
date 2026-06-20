@@ -18,6 +18,7 @@ import { useTheme } from '@/context/theme-context';
 import { useLanguage } from '@/context/language-context';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import * as Notifications from 'expo-notifications';
+import { useFonts, Kalam_700Bold } from '@expo-google-fonts/kalam';
 
 const STORAGE_KEY = '@BreatheFree:userData';
 const STORAGE_KEY_LOGS = '@BreatheFree:cravingLogs';
@@ -33,6 +34,10 @@ export default function ProfileScreen() {
   const { themeMode, activeScheme, setThemeMode } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const themeColors = Colors[activeScheme];
+
+  const [fontsLoaded] = useFonts({
+    Kalam_700Bold,
+  });
 
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -180,7 +185,7 @@ export default function ProfileScreen() {
     );
   };
 
-  if (isLoading) {
+  if (isLoading || !fontsLoaded) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: themeColors.background }]}>
         <ActivityIndicator size="large" color={themeColors.tint} />
@@ -204,9 +209,10 @@ export default function ProfileScreen() {
   const diffMs = Date.now() - quitDateObj.getTime();
   const daysQuit = Math.max(0, diffMs / (1000 * 60 * 60 * 24));
 
+  const badgeColors = ['blue', 'yellow', 'red']; // Colors for 3, 7, 30 days
   const badges = (t('profile.badges') as any[]).map((b, i) => {
     const daysRequired = [3, 7, 30][i];
-    return { ...b, earned: daysQuit >= daysRequired, daysRequired };
+    return { ...b, earned: daysQuit >= daysRequired, daysRequired, iconColor: badgeColors[i] };
   });
 
   return (
@@ -243,19 +249,22 @@ export default function ProfileScreen() {
                       style={[
                         styles.badgeDaysBackground,
                         {
+                          fontSize: String(badge.daysRequired).length > 1 ? 70 : 110,
+                          lineHeight: String(badge.daysRequired).length > 1 ? 88 : 110,
                           color: badge.earned
-                            ? themeColors.tint + '28'
-                            : themeColors.muted + '20',
+                            ? themeColors.tint
+                            : themeColors.muted + '40',
                         },
                       ]}
+                      numberOfLines={1}
                     >
                       {badge.daysRequired}
                     </Text>
                     <View style={styles.badgeIconWrap} pointerEvents="none">
                       <IconSymbol
-                        size={32}
+                        size={60}
                         name={badge.icon}
-                        color={badge.earned ? themeColors.tint : themeColors.muted}
+                        color={badge.earned ? badge.iconColor : themeColors.muted}
                       />
                     </View>
                   </View>
@@ -265,7 +274,7 @@ export default function ProfileScreen() {
                 <Text
                   style={[
                     styles.badgeTitle,
-                    { color: badge.earned ? themeColors.text : themeColors.muted },
+                    { color: badge.earned ? themeColors.tint : themeColors.muted },
                   ]}
                 >
                   {badge.title}
@@ -556,26 +565,25 @@ const styles = StyleSheet.create({
   },
   badgeItem: {
     width: '100%',
+    aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
-    paddingVertical: 14,
-    borderRadius: 16,
+    padding: 4,
+    borderRadius: 14,
     borderWidth: 1.5,
     overflow: 'hidden',
   },
   badgeIconStack: {
     width: '100%',
-    height: 64,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
   badgeDaysBackground: {
-    fontSize: 56,
-    fontWeight: '900',
-    lineHeight: 64,
+    fontFamily: 'Kalam_700Bold',
     textAlign: 'center',
+    includeFontPadding: false,
   },
   badgeIconWrap: {
     position: 'absolute',
