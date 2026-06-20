@@ -111,7 +111,12 @@ function AnimatedDonut({
 
 const STORAGE_KEY = '@BreatheFree:userData';
 
+// ...
+
 interface UserData {
+  cigarettesPerDay: number;
+  yearsSmoked: number;
+  pricePerPack: number;
   quitDate: string;
 }
 
@@ -222,7 +227,7 @@ export default function HealthScreen() {
   const themeColors = Colors[activeScheme];
 
   const [isLoading, setIsLoading] = useState(true);
-  const [quitDate, setQuitDate] = useState<string | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [nowTime, setNowTime] = useState(Date.now());
   const [chartKey, setChartKey] = useState(0);
 
@@ -230,15 +235,15 @@ export default function HealthScreen() {
     useCallback(() => {
       let isActive = true;
 
-      const fetchQuitDate = async () => {
+      const fetchUserData = async () => {
         try {
           if (isActive) setIsLoading(true);
           const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
           if (jsonValue != null && isActive) {
             const data: UserData = JSON.parse(jsonValue);
-            setQuitDate(data.quitDate);
+            setUserData(data);
           } else if (isActive) {
-            setQuitDate(null);
+            setUserData(null);
           }
         } catch (e) {
           console.error(e);
@@ -247,7 +252,7 @@ export default function HealthScreen() {
         }
       };
 
-      fetchQuitDate();
+      fetchUserData();
       setChartKey((k) => k + 1);
 
       const timer = setInterval(() => {
@@ -269,7 +274,7 @@ export default function HealthScreen() {
     );
   }
 
-  if (!quitDate) {
+  if (!userData) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: themeColors.background, padding: 24 }]}>
         <IconSymbol size={48} name="heart.fill" color={themeColors.muted} />
@@ -281,7 +286,7 @@ export default function HealthScreen() {
     );
   }
 
-  const quitTimeMs = new Date(quitDate).getTime();
+  const quitTimeMs = new Date(userData.quitDate).getTime();
   const timeElapsedMs = Math.max(0, nowTime - quitTimeMs);
   const daysQuit = timeElapsedMs / (1000 * 60 * 60 * 24);
 

@@ -61,6 +61,21 @@ export default function HomeScreen() {
 
   const quotes = t('home.quotes') as unknown as string[];
 
+  // Calculate streaks
+  const calculateStreak = (quitDate: string) => {
+    const quitTime = new Date(quitDate);
+    const now = new Date();
+    
+    // Set both to midnight to count full days
+    quitTime.setHours(0, 0, 0, 0);
+    now.setHours(0, 0, 0, 0);
+    
+    const diffTime = Math.abs(now.getTime() - quitTime.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  };
+
   // Fetch data on focus
   useFocusEffect(
     useCallback(() => {
@@ -324,6 +339,18 @@ export default function HomeScreen() {
         contentContainerStyle={styles.dashboardScroll}
         showsVerticalScrollIndicator={false}
       >
+
+        {/* Streak Card */}
+        <View style={[styles.streakCard, { backgroundColor: themeColors.card, borderColor: themeColors.tint }]}>
+          <View style={styles.streakInfo}>
+            <Text style={[styles.streakTitle, { color: themeColors.text }]}>
+              {t('home.streakTitle') || '🔥 Streaks'}
+            </Text>
+            <Text style={[styles.streakDays, { color: themeColors.tint }]}>
+              {userData ? calculateStreak(userData.quitDate) : 0} {t('home.days') || 'days'}
+            </Text>
+          </View>
+        </View>
 
         {/* Counter Card */}
         <View style={[styles.counterCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
@@ -710,5 +737,28 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     fontWeight: '500',
+  },
+  streakCard: {
+    borderRadius: 24,
+    borderWidth: 1.5,
+    padding: 20,
+    marginBottom: 20,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  streakInfo: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  streakTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  streakDays: {
+    fontSize: 32,
+    fontWeight: '900',
   },
 });

@@ -21,7 +21,13 @@
     "relapseDesc": "It takes many tries to quit for good. Don't see it as a failure, learn from triggers and start over immediately!",
     "relapseBtn": "Reset journey (Relapse)",
     "clearData": "Clear all data & Reset App",
-    "languageTitle": "Language"
+    "languageTitle": "Language",
+    "badgesTitle": "Achievements & Badges",
+    "badges": [
+      { "id": "b1", "title": "Newbie", "desc": "Quit for 3 days", "icon": "person.fill" },
+      { "id": "b2", "title": "Striver", "desc": "Quit for 1 week", "icon": "shield.fill" },
+      { "id": "b3", "title": "Hero", "desc": "Quit for 1 month", "icon": "heart.fill" }
+    ]
   },
   "home": {
     "welcome": "Welcome back,",
@@ -37,6 +43,7 @@
     "cigarettes": "cigarettes",
     "lifeRegained": "Life regained",
     "lifeRegainedDesc": "Life regained (11 mins/cigarette not smoked)",
+    "streakTitle": "🔥 Streaks",
     "tipsTitle": "Tips for cravings",
     "tipsBody": "Cravings usually peak after 3-5 minutes and will disappear. When craving, switch to the Cravings tab to practice 4-7-8 deep breathing to soothe your nerves instantly.",
     "setupTitle": "Journey Setup",
@@ -110,6 +117,7 @@
     "title": "Health Recovery",
     "subtitle": "Scientific statistics on the body's biological recovery speed",
     "chartTitle": "Summary recovery chart",
+    "savingsChartTitle": "Savings (Last 7 days)",
     "recovery": "recovered",
     "daysQuit": "smoke-free days",
     "milestonesTitle": "Biological recovery milestones",

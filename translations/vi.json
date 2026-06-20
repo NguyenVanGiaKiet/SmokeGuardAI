@@ -21,7 +21,13 @@
     "relapseDesc": "Nhiều người cần nhiều lần thử để cai hẳn thuốc lá. Đừng coi đó là thất bại, hãy học hỏi từ nguyên nhân kích thích và bắt đầu lại ngay lập tức!",
     "relapseBtn": "Đặt lại hành trình (Tái phát)",
     "clearData": "Xóa toàn bộ dữ liệu & Làm mới App",
-    "languageTitle": "Ngôn ngữ"
+    "languageTitle": "Ngôn ngữ",
+    "badgesTitle": "Thành Tựu & Huy Hiệu",
+    "badges": [
+      { "id": "b1", "title": "Người mới", "desc": "Cai được 3 ngày", "icon": "person.fill" },
+      { "id": "b2", "title": "Người kiên trì", "desc": "Cai được 1 tuần", "icon": "shield.fill" },
+      { "id": "b3", "title": "Người hùng", "desc": "Cai được 1 tháng", "icon": "heart.fill" }
+    ]
   },
   "home": {
     "welcome": "Chào mừng quay lại,",
@@ -37,6 +43,7 @@
     "cigarettes": "điếu",
     "lifeRegained": "Tuổi thọ được phục hồi",
     "lifeRegainedDesc": "Tuổi thọ được phục hồi (11 phút/điếu thuốc không hút)",
+    "streakTitle": "🔥 Chuỗi ngày",
     "tipsTitle": "Lời khuyên khi thèm thuốc",
     "tipsBody": "Cơn thèm thuốc lá thường đạt cực điểm sau 3-5 phút và sẽ biến mất. Khi thèm, hãy chuyển sang tab Cơn thèm để thực hành bài tập thở sâu 4-7-8 giúp xoa dịu thần kinh tức thì.",
     "setupTitle": "Thiết Lập Hành Trình",
@@ -110,6 +117,7 @@
     "title": "Sức Khỏe Phục Hồi",
     "subtitle": "Thống kê khoa học về tốc độ hồi phục sinh học của cơ thể",
     "chartTitle": "Biểu đồ phục hồi tổng hợp",
+    "savingsChartTitle": "Tiết kiệm (7 ngày qua)",
     "recovery": "hồi phục",
     "daysQuit": "ngày không hút thuốc",
     "milestonesTitle": "Các mốc hồi phục sinh học",

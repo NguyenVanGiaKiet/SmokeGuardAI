@@ -200,6 +200,13 @@ export default function ProfileScreen() {
   }
 
   const quitDateObj = new Date(userData.quitDate);
+  const diffMs = Date.now() - quitDateObj.getTime();
+  const daysQuit = Math.max(0, diffMs / (1000 * 60 * 60 * 24));
+  
+  const badges = (t('profile.badges', { returnObjects: true }) as any[]).map((b, i) => {
+    const daysRequired = [3, 7, 30][i];
+    return { ...b, earned: daysQuit >= daysRequired };
+  });
 
   return (
     <View style={[styles.container, { backgroundColor: themeColors.background }]}>
@@ -214,6 +221,34 @@ export default function ProfileScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Badges Section */}
+        <View style={[styles.infoCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <Text style={[styles.cardTitle, { color: themeColors.text }]}>{t('profile.badgesTitle')}</Text>
+          <View style={styles.badgesContainer}>
+            {badges.map((badge) => (
+              <View
+                key={badge.id}
+                style={[
+                  styles.badgeItem,
+                  {
+                    backgroundColor: badge.earned ? themeColors.tint + '15' : themeColors.border + '30',
+                    borderColor: badge.earned ? themeColors.tint : themeColors.border,
+                  },
+                ]}
+              >
+                <IconSymbol 
+                  size={24} 
+                  name={badge.icon} 
+                  color={badge.earned ? themeColors.tint : themeColors.muted} 
+                />
+                <Text style={[styles.badgeTitle, { color: badge.earned ? themeColors.text : themeColors.muted }]}>
+                  {badge.title}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
         {/* Profile Stats Summary */}
         <View style={[styles.infoCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
           <Text style={[styles.cardTitle, { color: themeColors.text }]}>{t('profile.totalOverview')}</Text>
@@ -481,6 +516,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     marginBottom: 14,
+  },
+  badgesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  badgeItem: {
+    flex: 1,
+    minWidth: '28%',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    gap: 8,
+  },
+  badgeTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   rowItem: {
     flexDirection: 'row',
