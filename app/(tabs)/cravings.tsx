@@ -108,7 +108,7 @@ export default function CravingsScreen() {
       setSelectedIntensity('Medium');
       setSelectedTrigger(TRIGGERS[0]);
       setNotesText('');
-      Alert.alert('Thành công', 'Đã ghi nhận cơn thèm. Bạn hãy kiên cường vượt qua nhé!');
+      Alert.alert(t('cravings.successAlertTitle'), t('cravings.successAlertMsg'));
     } catch (e) {
       console.error(e);
       Alert.alert('Lỗi', 'Không thể lưu nhật ký.');
@@ -117,12 +117,12 @@ export default function CravingsScreen() {
 
   const handleDeleteLog = (id: string) => {
     Alert.alert(
-      'Xóa nhật ký',
-      'Bạn có chắc chắn muốn xóa dòng nhật ký này?',
+      t('cravings.deleteAlertTitle'),
+      t('cravings.deleteAlertMsg'),
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: t('cravings.cancelAction'), style: 'cancel' },
         {
-          text: 'Xóa',
+          text: t('cravings.deleteAction'),
           style: 'destructive',
           onPress: async () => {
             const updated = logs.filter((item) => item.id !== id);
@@ -255,13 +255,13 @@ export default function CravingsScreen() {
   const getBreathingText = () => {
     switch (breathPhase) {
       case 'inhale':
-        return 'HÍT VÀO';
+        return t('cravings.breathingInhale');
       case 'hold':
-        return 'NÍN THỞ';
+        return t('cravings.breathingHold');
       case 'exhale':
-        return 'THỞ RA CHẬM';
+        return t('cravings.breathingExhale');
       default:
-        return 'THỞ SÂU 4-7-8';
+        return t('cravings.breathingIdle');
     }
   };
 
@@ -462,7 +462,7 @@ export default function CravingsScreen() {
                     backgroundColor: themeColors.background,
                   },
                 ]}
-                placeholder="Bạn đang cảm thấy thế nào? Ghi lại để theo dõi..."
+                placeholder={t('cravings.notesPlaceholder')}
                 placeholderTextColor={themeColors.muted}
                 multiline
                 numberOfLines={3}

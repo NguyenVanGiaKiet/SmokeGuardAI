@@ -142,21 +142,21 @@ const HEALTH_MILESTONES: Milestone[] = [
     id: '3',
     title: 'Thải lọc CO hoàn toàn',
     durationMs: 24 * 60 * 60 * 1000,
-    durationText: '24 giờ',
+    durationText: '1 ngày',
     description: 'Carbon monoxide được đào thải hoàn toàn khỏi cơ thể. Phổi bắt đầu quá trình tự làm sạch chất độc và đờm bám.',
   },
   {
     id: '4',
     title: 'Đào thải hoàn toàn Nicotine',
     durationMs: 48 * 60 * 60 * 1000,
-    durationText: '48 giờ',
+    durationText: '2 ngày',
     description: 'Toàn bộ chất nicotine đã được lọc bỏ. Vị giác và khứu giác của bạn bắt đầu nhạy bén và ăn uống ngon miệng hơn.',
   },
   {
     id: '5',
     title: 'Hít thở Dễ dàng',
     durationMs: 72 * 60 * 60 * 1000,
-    durationText: '72 giờ',
+    durationText: '3 ngày',
     description: 'Các ống phế quản trong phổi bắt đầu giãn ra và thư thái. Dung tích phổi tăng lên, giúp thở sâu nhẹ nhàng.',
   },
   {
@@ -201,16 +201,16 @@ const HEALTH_MILESTONES: Milestone[] = [
 // để biểu đồ donut và 2 hàng "mức thời gian / % đạt được" luôn đồng bộ với danh sách mốc bên dưới.
 const PROGRESS_POINTS = [
   { x: 0, y: 0, label: '0' },
-  { x: 20 / (60 * 24), y: 10, label: '20p' }, // 20 phút
-  { x: 8 / 24, y: 20, label: '8h' }, // 8 giờ
-  { x: 1, y: 30, label: '24h' }, // 24 giờ
-  { x: 2, y: 40, label: '48h' }, // 48 giờ
-  { x: 3, y: 50, label: '72h' }, // 72 giờ
-  { x: 14, y: 60, label: '2tuần' }, // 2 tuần
-  { x: 90, y: 70, label: '3th' }, // 3 tháng
-  { x: 365, y: 80, label: '1năm' }, // 1 năm
-  { x: 1825, y: 90, label: '5năm' }, // 5 năm
-  { x: 3650, y: 100, label: '10năm' }, // 10 năm
+  { x: 20 / (60 * 24), y: 10, label: '20 phút' }, // 20 phút
+  { x: 8 / 24, y: 20, label: '8 giờ' }, // 8 giờ
+  { x: 1, y: 30, label: '1 ngày' }, // 24 giờ
+  { x: 2, y: 40, label: '2 ngày' }, // 48 giờ
+  { x: 3, y: 50, label: '3 ngày' }, // 72 giờ
+  { x: 14, y: 60, label: '2 tuần' }, // 2 tuần
+  { x: 90, y: 70, label: '3 tháng' }, // 3 tháng
+  { x: 365, y: 80, label: '1 năm' }, // 1 năm
+  { x: 1825, y: 90, label: '5 năm' }, // 5 năm
+  { x: 3650, y: 100, label: '10 năm' }, // 10 năm
 ];
 
 // Các mốc hiển thị thành 2 hàng (thời gian / % đạt được) bên dưới số ngày không hút thuốc.
@@ -317,11 +317,11 @@ export default function HealthScreen() {
       const remainingMs = item.durationMs - timeElapsedMs;
       const remainingHours = remainingMs / (1000 * 60 * 60);
       if (remainingHours < 1) {
-        remainingText = `${t('health.minLeft').replace('...', Math.ceil(remainingHours * 60).toString())}`;
+        remainingText = `${t('health.minLeft').replace('...', Math.ceil(remainingHours * 60).toString())} ${t('health.min')}`;
       } else if (remainingHours < 24) {
-        remainingText = `${t('health.hourLeft').replace('...', Math.floor(remainingHours).toString())}`;
+        remainingText = `${t('health.hourLeft').replace('...', Math.floor(remainingHours).toString())} ${t('health.hour')}`;
       } else {
-        remainingText = `${t('health.dayLeft').replace('...', Math.floor(remainingHours / 24).toString())}`;
+        remainingText = `${t('health.dayLeft').replace('...', Math.floor(remainingHours / 24).toString())} ${t('health.day')}`;
       }
     }
 

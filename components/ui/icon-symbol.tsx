@@ -5,9 +5,6 @@ import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
 import { ComponentProps } from 'react';
 import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 
-type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
-type IconSymbolName = keyof typeof MAPPING;
-
 /**
  * Add your SF Symbols to Material Icons mappings here.
  * - see Material Icons in the [Icons Directory](https://icons.expo.fyi).
@@ -20,8 +17,15 @@ const MAPPING = {
   'chevron.right': 'chevron-right',
   'heart.fill': 'favorite',
   'leaf.fill': 'spa',
+  'book.fill': 'menu-book',
   'person.fill': 'person',
-} as IconMapping;
+  'banknote.fill': 'attach-money',
+  'shield.fill': 'security',
+  'hourglass.fill': 'hourglass-empty',
+  'message.fill': 'message',
+} as const;
+
+type IconSymbolName = keyof typeof MAPPING;
 
 /**
  * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
@@ -40,5 +44,5 @@ export function IconSymbol({
   style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  return <MaterialIcons color={color} size={size} name={MAPPING[name] as any} style={style} />;
 }

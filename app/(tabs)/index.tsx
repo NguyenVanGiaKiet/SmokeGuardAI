@@ -12,7 +12,6 @@ import {
   Alert,
   Image,
   LayoutAnimation,
-  UIManager,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
@@ -34,23 +33,6 @@ interface UserData {
 }
 
 const STORAGE_KEY = '@BreatheFree:userData';
-
-// LayoutAnimation cần được bật thủ công trên Android (mặc định tắt) để dot indicator
-// đổi kích thước mượt thay vì nhảy giật.
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
-// Ảnh minh hoạ tác hại của thuốc lá — đặt file trong thư mục /assets/images/harms/
-// và đổi lại tên file bên dưới cho khớp với ảnh thật của bạn.
-const HARM_IMAGES = [
-  require('@/assets/images/index/1042361_A30-a-11.jpg'),
-  require('@/assets/images/index/1042362_A30-a-12.jpg'),
-  require('@/assets/images/index/1042363_A30-a-13.jpg'),
-  require('@/assets/images/index/1042364_A30-a-14.jpg'),
-  require('@/assets/images/index/1042365_A30-a-15.jpg'),
-  require('@/assets/images/index/1042366_A30-a-16.jpg'),
-];
 
 export default function HomeScreen() {
   const { activeScheme } = useTheme();
@@ -93,35 +75,6 @@ export default function HomeScreen() {
     }, 15000);
     return () => clearInterval(quoteInterval);
   }, [quotes]);
-
-  // Tự động chuyển slide ảnh tác hại mỗi 3 giây — dừng hẳn khi người dùng chạm vào slider.
-  useFocusEffect(
-    useCallback(() => {
-      // Khi quay lại màn hình, hãy cuộn về đúng vị trí slide hiện tại để đồng bộ hóa
-      // Sử dụng setTimeout để đảm bảo View đã được render sẵn sàng.
-      const timer = setTimeout(() => {
-        harmScrollRef.current?.scrollTo({ x: harmSlideIndex * harmSlideWidth, animated: false });
-      }, 50);
-
-      if (!harmAutoPlay || HARM_IMAGES.length <= 1) {
-        return () => clearTimeout(timer);
-      }
-
-      const harmInterval = setInterval(() => {
-        setHarmSlideIndex((prev) => {
-          const next = (prev + 1) % HARM_IMAGES.length;
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-          harmScrollRef.current?.scrollTo({ x: next * harmSlideWidth, animated: true });
-          return next;
-        });
-      }, 3000);
-
-      return () => {
-        clearTimeout(timer);
-        clearInterval(harmInterval);
-      };
-    }, [harmAutoPlay, harmSlideWidth, harmSlideIndex])
-  );
 
   // Update counter every second
   useEffect(() => {
@@ -206,53 +159,6 @@ export default function HomeScreen() {
     } finally {
     }
   };
-
-  // Chỉ tính lại index khi cuộn ĐÃ DỪNG hẳn (kéo tay xong / hết đà trượt).
-  // Trước đây dùng onScroll (bắn liên tục mỗi 16ms) nên trong lúc auto-chuyển slide
-  // đang animate, nó tính ra index "giữa chừng" rồi ghi đè lại index cũ -> dot bị giật/nháy.
-  const updateHarmIndexFromOffset = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetX = e.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / harmSlideWidth);
-    setHarmSlideIndex((prev) => {
-      if (index === prev) return prev;
-      if (Platform.OS === 'android' || Platform.OS === 'ios') {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      }
-      return index;
-    });
-  };
-
-  // Người dùng chạm/kéo vào slider -> tạm tắt auto chuyển slide.
-  const HARM_RESUME_DELAY = 3000; // ms không thao tác trước khi auto chuyển lại
-
-  const handleHarmSlideTouchStart = () => {
-    if (harmResumeTimeout.current) {
-      clearTimeout(harmResumeTimeout.current);
-      harmResumeTimeout.current = null;
-    }
-    if (harmAutoPlay) setHarmAutoPlay(false);
-  };
-
-  // Khi người dùng buông tay / kết thúc thao tác kéo -> đợi một lúc rồi tự bật auto lại.
-  const handleHarmSlideTouchEnd = () => {
-    if (harmResumeTimeout.current) clearTimeout(harmResumeTimeout.current);
-    harmResumeTimeout.current = setTimeout(() => {
-      setHarmAutoPlay(true);
-      harmResumeTimeout.current = null;
-    }, HARM_RESUME_DELAY);
-  };
-
-  // Cuộn kết thúc (do tay kéo hoặc trớn trượt) -> chốt lại index đúng + khởi động lại đếm giờ resume.
-  const handleHarmSlideSettled = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    updateHarmIndexFromOffset(e);
-    handleHarmSlideTouchEnd();
-  };
-
-  useEffect(() => {
-    return () => {
-      if (harmResumeTimeout.current) clearTimeout(harmResumeTimeout.current);
-    };
-  }, []);
 
   if (isLoading) {
     return (
@@ -395,7 +301,7 @@ export default function HomeScreen() {
   };
 
   const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US', { style: 'currency', currency: language === 'vi' ? 'VND' : 'USD' })
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
       .format(val);
   };
 
@@ -461,7 +367,7 @@ export default function HomeScreen() {
           {/* Stat 1: Money saved */}
           <View style={[styles.statBox, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
             <View style={[styles.statIconCircle, { backgroundColor: '#10B98120' }]}>
-              <IconSymbol size={20} name="house.fill" color="#10B981" />
+              <IconSymbol size={20} name="banknote.fill" color="#10B981" />
             </View>
             <Text style={[styles.statValue, { color: themeColors.text }]}>
               {formatCurrency(moneySaved)}
@@ -472,7 +378,7 @@ export default function HomeScreen() {
           {/* Stat 2: Cigarettes avoided */}
           <View style={[styles.statBox, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
             <View style={[styles.statIconCircle, { backgroundColor: '#F59E0B20' }]}>
-              <IconSymbol size={20} name="heart.fill" color="#F59E0B" />
+              <IconSymbol size={20} name="shield.fill" color="#F59E0B" />
             </View>
             <Text style={[styles.statValue, { color: themeColors.text }]}>
               {cigarettesAvoided} {t('home.cigarettes')}
@@ -484,7 +390,7 @@ export default function HomeScreen() {
         {/* Large Stat Box: Life Regained */}
         <View style={[styles.largeStatCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
           <View style={[styles.statIconCircle, { backgroundColor: '#0EA5E920' }]}>
-            <IconSymbol size={22} name="heart.fill" color="#0EA5E9" />
+            <IconSymbol size={22} name="hourglass.fill" color="#0EA5E9" />
           </View>
           <View style={styles.largeStatInfo}>
             <Text style={[styles.largeStatValue, { color: themeColors.text }]}>
@@ -496,58 +402,13 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Harm Images Slider — ảnh minh hoạ tác hại của thuốc lá */}
-        <View style={styles.harmSliderWrapper}>
-          <Text style={[styles.harmSliderTitle, { color: themeColors.text }]}>
-            Những tác hại khi hút thuốc lá
-          </Text>
-          <ScrollView
-            ref={harmScrollRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onTouchStart={handleHarmSlideTouchStart}
-            onTouchEnd={handleHarmSlideTouchEnd}
-            onScrollBeginDrag={handleHarmSlideTouchStart}
-            onScrollEndDrag={handleHarmSlideSettled}
-            onMomentumScrollEnd={handleHarmSlideSettled}
-          >
-            {HARM_IMAGES.map((img, idx) => (
-              <View key={idx} style={[styles.harmSlide, { width: harmSlideWidth }]}>
-                <Image
-                  source={img}
-                  style={[
-                    styles.harmImage,
-                    { width: harmSlideWidth, borderColor: themeColors.border },
-                  ]}
-                  resizeMode="cover"
-                />
-              </View>
-            ))}
-          </ScrollView>
-
-          {/* Dot indicators */}
-          <View style={styles.harmDotsRow}>
-            {HARM_IMAGES.map((_, idx) => (
-              <View
-                key={idx}
-                style={[
-                  styles.harmDot,
-                  {
-                    backgroundColor: idx === harmSlideIndex ? themeColors.tint : themeColors.border,
-                    width: idx === harmSlideIndex ? 18 : 6,
-                  },
-                ]}
-              />
-            ))}
-          </View>
-        </View>
+        
 
         {/* Motivational Quote Card */}
         <View style={[styles.quoteCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
           <IconSymbol
             size={22}
-            name="heart.fill"
+            name="message.fill"
             color={themeColors.tint}
             style={styles.quoteIcon}
           />
@@ -810,34 +671,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,
-  },
-  harmSliderTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    marginBottom: 12,
-    marginLeft: 4,
-  },
-  harmSliderWrapper: {
-    marginBottom: 20,
-  },
-  harmSlide: {
-    alignItems: 'center',
-  },
-  harmImage: {
-    height: 180,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  harmDotsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 10,
-  },
-  harmDot: {
-    height: 6,
-    borderRadius: 3,
   },
   quoteCard: {
     borderRadius: 20,
