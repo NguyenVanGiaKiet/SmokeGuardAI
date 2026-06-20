@@ -22,6 +22,7 @@ import { Colors } from '@/constants/theme';
 import { useTheme } from '@/context/theme-context';
 import { useLanguage } from '@/context/language-context';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { scheduleDailyReminder } from '@/utils/notifications';
 
 const { width } = Dimensions.get('window');
 
@@ -61,11 +62,29 @@ export default function HomeScreen() {
 
   const quotes = t('home.quotes') as unknown as string[];
 
+  // State for last opened date
+  const [lastOpened, setLastOpened] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getLastOpened = async () => {
+        const last = await AsyncStorage.getItem('@BreatheFree:lastOpened');
+        setLastOpened(last);
+        await AsyncStorage.setItem('@BreatheFree:lastOpened', new Date().toISOString());
+    };
+    getLastOpened();
+  }, []);
+
   // Calculate streaks
-  const calculateStreak = (quitDate: string) => {
+  const calculateStreak = (quitDate: string, lastOpened: string | null) => {
     const quitTime = new Date(quitDate);
+    const lastOpenTime = lastOpened ? new Date(lastOpened) : new Date();
     const now = new Date();
     
+    // Check if more than 24 hours have passed since last opened
+    if (lastOpened && (now.getTime() - lastOpenTime.getTime() > 24 * 60 * 60 * 1000)) {
+        return 0; // Streak broken
+    }
+
     // Set both to midnight to count full days
     quitTime.setHours(0, 0, 0, 0);
     now.setHours(0, 0, 0, 0);
@@ -85,6 +104,7 @@ export default function HomeScreen() {
 
   // Rotate quote every 15 seconds
   useEffect(() => {
+    scheduleDailyReminder();
     const quoteInterval = setInterval(() => {
       setQuoteIndex((prev) => (prev + 1) % quotes.length);
     }, 15000);
@@ -341,13 +361,21 @@ export default function HomeScreen() {
       >
 
         {/* Streak Card */}
-        <View style={[styles.streakCard, { backgroundColor: themeColors.card, borderColor: themeColors.tint }]}>
+        <View style={[styles.streakCard, { backgroundColor: themeColors.card, borderColor: (userData ? calculateStreak(userData.quitDate, lastOpened) : 0) >= 3 ? themeColors.tint : themeColors.border }]}>
           <View style={styles.streakInfo}>
-            <Text style={[styles.streakTitle, { color: themeColors.text }]}>
-              {t('home.streakTitle') || '🔥 Streaks'}
-            </Text>
-            <Text style={[styles.streakDays, { color: themeColors.tint }]}>
-              {userData ? calculateStreak(userData.quitDate) : 0} {t('home.days') || 'days'}
+            <View style={styles.streakHeader}>
+                <IconSymbol 
+                    size={24} 
+                    name="flame.fill" 
+                    color={(userData ? calculateStreak(userData.quitDate, lastOpened) : 0) >= 3 ? themeColors.tint : themeColors.muted} 
+                />
+                <Text style={[styles.streakTitle, { color: themeColors.text, marginLeft: 8 }]}>
+                {t('home.streakTitle') || 'Streaks'}
+                </Text>
+
+            </View>
+            <Text style={[styles.streakDays, { color: (userData ? calculateStreak(userData.quitDate, lastOpened) : 0) >= 3 ? themeColors.tint : themeColors.text }]}>
+              {userData ? calculateStreak(userData.quitDate, lastOpened) : 0} {t('home.days') || 'days'}
             </Text>
           </View>
         </View>
@@ -750,6 +778,11 @@ const styles = StyleSheet.create({
   streakInfo: {
     alignItems: 'center',
     gap: 4,
+  },
+  streakHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   streakTitle: {
     fontSize: 14,

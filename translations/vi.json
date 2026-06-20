@@ -43,7 +43,7 @@
     "cigarettes": "điếu",
     "lifeRegained": "Tuổi thọ được phục hồi",
     "lifeRegainedDesc": "Tuổi thọ được phục hồi (11 phút/điếu thuốc không hút)",
-    "streakTitle": "🔥 Chuỗi ngày",
+    "streakTitle": "Chuỗi ngày",
     "tipsTitle": "Lời khuyên khi thèm thuốc",
     "tipsBody": "Cơn thèm thuốc lá thường đạt cực điểm sau 3-5 phút và sẽ biến mất. Khi thèm, hãy chuyển sang tab Cơn thèm để thực hành bài tập thở sâu 4-7-8 giúp xoa dịu thần kinh tức thì.",
     "setupTitle": "Thiết Lập Hành Trình",
@@ -106,6 +106,10 @@
       "friends": "Bạn bè rủ rê",
       "other": "Khác"
     }
+  },
+  "notifications": {
+    "dailyTitle": "Nhắc nhở từ BreatheFree",
+    "dailyBody": "Một ngày mới, một hơi thở trong lành! Hãy tiếp tục cố gắng nhé!"
   },
   "discover": {
     "title": "Khám phá tác hại",

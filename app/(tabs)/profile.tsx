@@ -17,6 +17,7 @@ import { Colors } from '@/constants/theme';
 import { useTheme } from '@/context/theme-context';
 import { useLanguage } from '@/context/language-context';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import * as Notifications from 'expo-notifications';
 
 const STORAGE_KEY = '@BreatheFree:userData';
 const STORAGE_KEY_LOGS = '@BreatheFree:cravingLogs';
@@ -202,16 +203,16 @@ export default function ProfileScreen() {
   const quitDateObj = new Date(userData.quitDate);
   const diffMs = Date.now() - quitDateObj.getTime();
   const daysQuit = Math.max(0, diffMs / (1000 * 60 * 60 * 24));
-  
-  const badges = (t('profile.badges', { returnObjects: true }) as any[]).map((b, i) => {
+
+  const badges = (t('profile.badges') as any[]).map((b, i) => {
     const daysRequired = [3, 7, 30][i];
-    return { ...b, earned: daysQuit >= daysRequired };
+    return { ...b, earned: daysQuit >= daysRequired, daysRequired };
   });
 
   return (
     <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <StatusBar style={activeScheme === 'dark' ? 'light' : 'dark'} />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: themeColors.text }]}>{t('profile.title')}</Text>
@@ -226,22 +227,47 @@ export default function ProfileScreen() {
           <Text style={[styles.cardTitle, { color: themeColors.text }]}>{t('profile.badgesTitle')}</Text>
           <View style={styles.badgesContainer}>
             {badges.map((badge) => (
-              <View
-                key={badge.id}
-                style={[
-                  styles.badgeItem,
-                  {
-                    backgroundColor: badge.earned ? themeColors.tint + '15' : themeColors.border + '30',
-                    borderColor: badge.earned ? themeColors.tint : themeColors.border,
-                  },
-                ]}
-              >
-                <IconSymbol 
-                  size={24} 
-                  name={badge.icon} 
-                  color={badge.earned ? themeColors.tint : themeColors.muted} 
-                />
-                <Text style={[styles.badgeTitle, { color: badge.earned ? themeColors.text : themeColors.muted }]}>
+              <View key={badge.id} style={styles.badgeWrapper}>
+                <View
+                  style={[
+                    styles.badgeItem,
+                    {
+                      backgroundColor: badge.earned ? themeColors.tint + '15' : themeColors.border + '30',
+                      borderColor: badge.earned ? themeColors.tint : themeColors.border,
+                    },
+                  ]}
+                >
+                  {/* Khối trên: số ngày làm nền + icon canh giữa chính xác */}
+                  <View style={styles.badgeIconStack}>
+                    <Text
+                      style={[
+                        styles.badgeDaysBackground,
+                        {
+                          color: badge.earned
+                            ? themeColors.tint + '28'
+                            : themeColors.muted + '20',
+                        },
+                      ]}
+                    >
+                      {badge.daysRequired}
+                    </Text>
+                    <View style={styles.badgeIconWrap} pointerEvents="none">
+                      <IconSymbol
+                        size={32}
+                        name={badge.icon}
+                        color={badge.earned ? themeColors.tint : themeColors.muted}
+                      />
+                    </View>
+                  </View>
+                </View>
+
+                {/* Tên huy hiệu nằm hẳn bên ngoài, dưới card */}
+                <Text
+                  style={[
+                    styles.badgeTitle,
+                    { color: badge.earned ? themeColors.text : themeColors.muted },
+                  ]}
+                >
                   {badge.title}
                 </Text>
               </View>
@@ -252,7 +278,7 @@ export default function ProfileScreen() {
         {/* Profile Stats Summary */}
         <View style={[styles.infoCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
           <Text style={[styles.cardTitle, { color: themeColors.text }]}>{t('profile.totalOverview')}</Text>
-          
+
           <View style={styles.rowItem}>
             <Text style={[styles.rowLabel, { color: themeColors.muted }]}>{t('profile.startDate')}</Text>
             <Text style={[styles.rowValue, { color: themeColors.text }]}>
@@ -463,7 +489,7 @@ export default function ProfileScreen() {
 
         {/* Clear Data Card */}
         <TouchableOpacity
-          style={[styles.clearBtn, { borderColor: themeColors.border }]}
+          style={[styles.clearBtn, { borderColor: themeColors.border, marginBottom: 10 }]}
           onPress={handleClearAllData}
         >
           <Text style={styles.clearBtnText}>{t('profile.clearData')}</Text>
@@ -522,14 +548,43 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 10,
   },
-  badgeItem: {
+  badgeWrapper: {
     flex: 1,
     minWidth: '28%',
     alignItems: 'center',
+    gap: 6,
+  },
+  badgeItem: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 12,
+    paddingVertical: 14,
     borderRadius: 16,
     borderWidth: 1.5,
-    gap: 8,
+    overflow: 'hidden',
+  },
+  badgeIconStack: {
+    width: '100%',
+    height: 64,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  badgeDaysBackground: {
+    fontSize: 56,
+    fontWeight: '900',
+    lineHeight: 64,
+    textAlign: 'center',
+  },
+  badgeIconWrap: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   badgeTitle: {
     fontSize: 12,

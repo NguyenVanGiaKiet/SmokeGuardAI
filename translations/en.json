@@ -43,7 +43,7 @@
     "cigarettes": "cigarettes",
     "lifeRegained": "Life regained",
     "lifeRegainedDesc": "Life regained (11 mins/cigarette not smoked)",
-    "streakTitle": "🔥 Streaks",
+    "streakTitle": "Streaks",
     "tipsTitle": "Tips for cravings",
     "tipsBody": "Cravings usually peak after 3-5 minutes and will disappear. When craving, switch to the Cravings tab to practice 4-7-8 deep breathing to soothe your nerves instantly.",
     "setupTitle": "Journey Setup",
@@ -106,6 +106,10 @@
       "friends": "Friends",
       "other": "Other"
     }
+  },
+  "notifications": {
+    "dailyTitle": "BreatheFree Reminder",
+    "dailyBody": "A new day, a fresh breath! Keep going, you're doing great!"
   },
   "discover": {
     "title": "Discover Harms",

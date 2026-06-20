@@ -23,7 +23,8 @@ const MAPPING = {
   'shield.fill': 'security',
   'hourglass.fill': 'hourglass-empty',
   'message.fill': 'message',
-} as const;
+  'flame.fill': 'local-fire-department',
+  } as const;
 
 type IconSymbolName = keyof typeof MAPPING;
 
