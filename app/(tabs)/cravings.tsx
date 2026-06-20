@@ -19,8 +19,12 @@ import { Colors } from '@/constants/theme';
 import { useTheme } from '@/context/theme-context';
 import { useLanguage } from '@/context/language-context';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { RunBreatheCarousel } from '@/components/tabs/RunBreatheCarousel';
+import { RunTracker } from '@/components/tabs/RunTracker';
+import { RunningHistory } from '@/components/tabs/RunningHistory';
 
 const STORAGE_KEY_LOGS = '@BreatheFree:cravingLogs';
+const STORAGE_KEY_RUNS = '@BreatheFree:runLogs';
 
 interface CravingLog {
   id: string;
@@ -53,6 +57,7 @@ export default function CravingsScreen() {
 
   // Cravings Log States
   const [logs, setLogs] = useState<CravingLog[]>([]);
+  const [runHistory, setRunHistory] = useState<any[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedIntensity, setSelectedIntensity] = useState<'Low' | 'Medium' | 'High'>('Medium');
   const [selectedTrigger, setSelectedTrigger] = useState(TRIGGERS[0]);
@@ -72,6 +77,7 @@ export default function CravingsScreen() {
   useFocusEffect(
     useCallback(() => {
       loadLogs();
+      loadRunHistory();
       return () => {
         // Cleanup breathing when leaving screen
         stopBreathing();
@@ -87,6 +93,33 @@ export default function CravingsScreen() {
       }
     } catch (e) {
       console.error('Failed to load craving logs', e);
+    }
+  };
+
+  const loadRunHistory = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(STORAGE_KEY_RUNS);
+      if (jsonValue != null) {
+        setRunHistory(JSON.parse(jsonValue));
+      }
+    } catch (e) {
+      console.error('Failed to load run history', e);
+    }
+  };
+
+  const saveRunSession = async (steps: number, distance: string) => {
+    const newRun = {
+      id: Date.now().toString(),
+      date: new Date().toLocaleDateString('vi-VN'),
+      steps,
+      distance,
+    };
+    const updatedHistory = [newRun, ...runHistory];
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY_RUNS, JSON.stringify(updatedHistory));
+      setRunHistory(updatedHistory);
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -291,87 +324,99 @@ export default function CravingsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Breathing Assistant Card */}
-        <View style={[styles.breathingCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-          <Text style={[styles.cardTitle, { color: themeColors.text }]}>{t('cravings.breathingTitle')}</Text>
-          <Text style={[styles.cardSub, { color: themeColors.muted }]}>
-            {t('cravings.breathingDesc')}
-          </Text>
+        {/* Run & Breathe Carousel */}
+        <RunBreatheCarousel>
+          {/* Breathing Page */}
+          <View>
+            {/* Breathing Assistant Card */}
+            <View style={[styles.breathingCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+              <Text style={[styles.cardTitle, { color: themeColors.text }]}>{t('cravings.breathingTitle')}</Text>
+              <Text style={[styles.cardSub, { color: themeColors.muted }]}>
+                {t('cravings.breathingDesc')}
+              </Text>
 
-          {/* Breathing Bubble Area */}
-          <View style={styles.bubbleArea}>
-            <Animated.View
-              style={[
-                styles.breathingBubble,
-                {
-                  transform: [{ scale: scaleAnim }],
-                  opacity: opacityAnim,
-                  backgroundColor: getPhaseColor() + '20',
-                  borderColor: getPhaseColor(),
-                },
-              ]}
-            >
-              <Animated.View
+              {/* Breathing Bubble Area */}
+              <View style={styles.bubbleArea}>
+                <Animated.View
+                  style={[
+                    styles.breathingBubble,
+                    {
+                      transform: [{ scale: scaleAnim }],
+                      opacity: opacityAnim,
+                      backgroundColor: getPhaseColor() + '20',
+                      borderColor: getPhaseColor(),
+                    },
+                  ]}
+                >
+                  <Animated.View
+                    style={[
+                      styles.innerBubble,
+                      {
+                        backgroundColor: getPhaseColor(),
+                      },
+                    ]}
+                  >
+                    {isBreathing ? (
+                      <View style={styles.bubbleContent}>
+                        <Text style={styles.bubblePhaseText}>{getBreathingText()}</Text>
+                        <Text style={styles.bubbleCountText}>{breathCountdown}</Text>
+                      </View>
+                    ) : (
+                      <IconSymbol size={32} name="leaf.fill" color="#FFF" />
+                    )}
+                  </Animated.View>
+                </Animated.View>
+              </View>
+
+              {/* Action Button */}
+              <TouchableOpacity
                 style={[
-                  styles.innerBubble,
-                  {
-                    backgroundColor: getPhaseColor(),
-                  },
+                  styles.breathingBtn,
+                  { backgroundColor: isBreathing ? themeColors.danger : themeColors.tint },
                 ]}
+                onPress={isBreathing ? stopBreathing : startBreathing}
               >
-                {isBreathing ? (
-                  <View style={styles.bubbleContent}>
-                    <Text style={styles.bubblePhaseText}>{getBreathingText()}</Text>
-                    <Text style={styles.bubbleCountText}>{breathCountdown}</Text>
-                  </View>
-                ) : (
-                  <IconSymbol size={32} name="leaf.fill" color="#FFF" />
-                )}
-              </Animated.View>
-            </Animated.View>
+                <Text style={styles.breathingBtnText}>
+                  {isBreathing ? t('cravings.breathingBtnStop') : t('cravings.breathingBtnStart')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Cravings Section */}
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{t('cravings.logsTitle')}</Text>
+              <TouchableOpacity
+                style={[styles.addLogBtn, { backgroundColor: themeColors.tint + '15' }]}
+                onPress={() => setIsModalVisible(true)}
+              >
+                <Text style={[styles.addLogBtnText, { color: themeColors.tint }]}>{t('cravings.addLog')}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {logs.length === 0 ? (
+              <View style={[styles.emptyCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+                <IconSymbol size={28} name="leaf.fill" color={themeColors.muted} />
+                <Text style={[styles.emptyText, { color: themeColors.muted }]}>
+                  {t('cravings.emptyLogs')}
+                </Text>
+              </View>
+            ) : (
+              <FlatList
+                data={logs.slice(0, 5)} // Show recent 5 logs
+                keyExtractor={(item) => item.id}
+                renderItem={renderLogItem}
+                scrollEnabled={false}
+                contentContainerStyle={styles.logsList}
+              />
+            )}
           </View>
 
-          {/* Action Button */}
-          <TouchableOpacity
-            style={[
-              styles.breathingBtn,
-              { backgroundColor: isBreathing ? themeColors.danger : themeColors.tint },
-            ]}
-            onPress={isBreathing ? stopBreathing : startBreathing}
-          >
-            <Text style={styles.breathingBtnText}>
-              {isBreathing ? t('cravings.breathingBtnStop') : t('cravings.breathingBtnStart')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Cravings Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{t('cravings.logsTitle')}</Text>
-          <TouchableOpacity
-            style={[styles.addLogBtn, { backgroundColor: themeColors.tint + '15' }]}
-            onPress={() => setIsModalVisible(true)}
-          >
-            <Text style={[styles.addLogBtnText, { color: themeColors.tint }]}>{t('cravings.addLog')}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {logs.length === 0 ? (
-          <View style={[styles.emptyCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-            <IconSymbol size={28} name="leaf.fill" color={themeColors.muted} />
-            <Text style={[styles.emptyText, { color: themeColors.muted }]}>
-              {t('cravings.emptyLogs')}
-            </Text>
+          {/* Running Tracker Page */}
+          <View>
+            <RunTracker themeColors={themeColors} onStop={saveRunSession} />
+            <RunningHistory themeColors={themeColors} history={runHistory} />
           </View>
-        ) : (
-          <FlatList
-            data={logs.slice(0, 5)} // Show recent 5 logs
-            keyExtractor={(item) => item.id}
-            renderItem={renderLogItem}
-            scrollEnabled={false}
-            contentContainerStyle={styles.logsList}
-          />
-        )}
+        </RunBreatheCarousel>
       </ScrollView>
 
       {/* Log Modal */}
@@ -504,7 +549,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   scrollContent: {
-    padding: 20,
+    paddingTop: 0, // Removed padding top
+    paddingHorizontal: 20,
     paddingBottom: 110,
   },
   breathingCard: {

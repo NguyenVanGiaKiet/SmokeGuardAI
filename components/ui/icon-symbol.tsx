@@ -24,6 +24,7 @@ const MAPPING = {
   'hourglass.fill': 'hourglass-empty',
   'message.fill': 'message',
   'flame.fill': 'local-fire-department',
+  'figure.run': 'directions-run',
   } as const;
 
 type IconSymbolName = keyof typeof MAPPING;

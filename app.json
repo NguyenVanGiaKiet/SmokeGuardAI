@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMotionUsageDescription": "Ứng dụng cần quyền truy cập chuyển động để đếm bước chân khi bạn chạy bộ."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,6 +24,9 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.giakiet.breathefree",
+      "permissions": [
+        "android.permission.ACTIVITY_RECOGNITION"
+      ]
     },
     "web": {
       "output": "static",
@@ -50,8 +56,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "a8f0180b-9b66-4db4-9e77-57311d98abe2"
+        "projectId": "c14debbb-dfbe-4325-89be-d47c72532a86"
       }
-    }
+    },
+    "owner": "giakiet"
   }
 }
