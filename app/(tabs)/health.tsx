@@ -13,6 +13,7 @@ import {
   Easing,
   FlatList,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -96,7 +97,6 @@ function AnimatedDonut({
           strokeLinecap="round"
           strokeDasharray={`${circumference}, ${circumference}`}
           strokeDashoffset={strokeDashoffset}
-          // Bắt đầu vẽ từ vị trí 12 giờ, vẽ theo chiều kim đồng hồ
           rotation={-90}
           originX={size / 2}
           originY={size / 2}
@@ -127,86 +127,94 @@ const HEALTH_MILESTONES: Milestone[] = [
   {
     id: '1',
     title: 'Huyết áp & Nhịp tim',
-    durationMs: 20 * 60 * 1000, // 20 mins
+    durationMs: 20 * 60 * 1000,
     durationText: '20 phút',
     description: 'Huyết áp và nhịp tim của bạn bắt đầu giảm trở lại mức bình thường. Các chi bắt đầu ấm lên.',
   },
   {
     id: '2',
     title: 'Khí Carbon Monoxide',
-    durationMs: 8 * 60 * 60 * 1000, // 8 hours
+    durationMs: 8 * 60 * 60 * 1000,
     durationText: '8 giờ',
     description: 'Nồng độ khí CO độc hại trong máu giảm một nửa. Nồng độ oxy trong máu phục hồi về mức bình thường.',
   },
   {
     id: '3',
     title: 'Thải lọc CO hoàn toàn',
-    durationMs: 24 * 60 * 60 * 1000, // 24 hours
+    durationMs: 24 * 60 * 60 * 1000,
     durationText: '24 giờ',
     description: 'Carbon monoxide được đào thải hoàn toàn khỏi cơ thể. Phổi bắt đầu quá trình tự làm sạch chất độc và đờm bám.',
   },
   {
     id: '4',
     title: 'Đào thải hoàn toàn Nicotine',
-    durationMs: 48 * 60 * 60 * 1000, // 48 hours
+    durationMs: 48 * 60 * 60 * 1000,
     durationText: '48 giờ',
     description: 'Toàn bộ chất nicotine đã được lọc bỏ. Vị giác và khứu giác của bạn bắt đầu nhạy bén và ăn uống ngon miệng hơn.',
   },
   {
     id: '5',
     title: 'Hít thở Dễ dàng',
-    durationMs: 72 * 60 * 60 * 1000, // 72 hours
+    durationMs: 72 * 60 * 60 * 1000,
     durationText: '72 giờ',
     description: 'Các ống phế quản trong phổi bắt đầu giãn ra và thư thái. Dung tích phổi tăng lên, giúp thở sâu nhẹ nhàng.',
   },
   {
     id: '6',
     title: 'Tuần hoàn Máu & Thể lực',
-    durationMs: 2 * 7 * 24 * 60 * 60 * 1000, // 2 weeks
+    durationMs: 2 * 7 * 24 * 60 * 60 * 1000,
     durationText: '2 tuần',
     description: 'Hệ tuần hoàn máu cải thiện rõ rệt khắp cơ thể. Các hoạt động thể chất, đi bộ hay chạy bộ bắt đầu ít bị mệt hơn.',
   },
   {
     id: '7',
     title: 'Chức năng Phổi khỏe mạnh',
-    durationMs: 3 * 30 * 24 * 60 * 60 * 1000, // 3 months
+    durationMs: 3 * 30 * 24 * 60 * 60 * 1000,
     durationText: '3 tháng',
     description: 'Chức năng lọc và hấp thụ oxy của phổi tăng lên đến 10%. Các triệu chứng ho khan, khò khè giảm rõ rệt.',
   },
   {
     id: '8',
     title: 'Giảm nguy cơ Bệnh tim',
-    durationMs: 365 * 24 * 60 * 60 * 1000, // 1 year
+    durationMs: 365 * 24 * 60 * 60 * 1000,
     durationText: '1 năm',
     description: 'Nguy cơ mắc bệnh tim mạch vành và nhồi máu cơ tim giảm đi một nửa so với thời điểm bạn còn hút thuốc.',
   },
   {
     id: '9',
     title: 'Ngừa Đột quỵ',
-    durationMs: 5 * 365 * 24 * 60 * 60 * 1000, // 5 years
+    durationMs: 5 * 365 * 24 * 60 * 60 * 1000,
     durationText: '5 năm',
     description: 'Nguy cơ đột quỵ được giảm thiểu đáng kể, trở lại mức tương đương như một người chưa từng hút thuốc lá.',
   },
   {
     id: '10',
     title: 'Ngăn ngừa Ung thư Phổi',
-    durationMs: 10 * 365 * 24 * 60 * 60 * 1000, // 10 years
+    durationMs: 10 * 365 * 24 * 60 * 60 * 1000,
     durationText: '10 năm',
     description: 'Nguy cơ tử vong do ung thư phổi giảm xuống một nửa. Nguy cơ mắc các bệnh ung thư vòm họng, thực quản cũng giảm mạnh.',
   },
 ];
 
-// Reference points used to interpolate overall recovery percentage
-// X: time in days, Y: recovery percentage (0 to 100)
+// Reference points used to interpolate overall recovery percentage.
+// Khớp 1-1 với 10 mốc trong HEALTH_MILESTONES — mỗi mốc đạt được sẽ cộng thêm 10%,
+// để biểu đồ donut và 2 hàng "mức thời gian / % đạt được" luôn đồng bộ với danh sách mốc bên dưới.
 const PROGRESS_POINTS = [
-  { x: 0, y: 0 },
-  { x: 1, y: 25 },
-  { x: 7, y: 45 },
-  { x: 90, y: 70 },
-  { x: 365, y: 85 },
-  { x: 1825, y: 95 },
-  { x: 3650, y: 100 },
+  { x: 0, y: 0, label: '0' },
+  { x: 20 / (60 * 24), y: 10, label: '20p' }, // 20 phút
+  { x: 8 / 24, y: 20, label: '8h' }, // 8 giờ
+  { x: 1, y: 30, label: '24h' }, // 24 giờ
+  { x: 2, y: 40, label: '48h' }, // 48 giờ
+  { x: 3, y: 50, label: '72h' }, // 72 giờ
+  { x: 14, y: 60, label: '2tuần' }, // 2 tuần
+  { x: 90, y: 70, label: '3th' }, // 3 tháng
+  { x: 365, y: 80, label: '1năm' }, // 1 năm
+  { x: 1825, y: 90, label: '5năm' }, // 5 năm
+  { x: 3650, y: 100, label: '10năm' }, // 10 năm
 ];
+
+// Các mốc hiển thị thành 2 hàng (thời gian / % đạt được) bên dưới số ngày không hút thuốc.
+const DISPLAY_LEVELS = PROGRESS_POINTS.filter((p) => p.x > 0);
 
 export default function HealthScreen() {
   const { activeScheme } = useTheme();
@@ -240,7 +248,7 @@ export default function HealthScreen() {
       };
 
       fetchQuitDate();
-      setChartKey((k) => k + 1); // remount donut chart -> phát lại animation mỗi lần vào tab
+      setChartKey((k) => k + 1);
 
       const timer = setInterval(() => {
         if (isActive) setNowTime(Date.now());
@@ -296,21 +304,24 @@ export default function HealthScreen() {
   const currentPercent = getCurrentPercent();
   const roundedPercent = Math.floor(currentPercent);
 
-  const renderMilestone = ({ item }: { item: Milestone }) => {
+  const renderMilestone = ({ item, index }: { item: Milestone; index: number }) => {
     const progress = Math.min(1, timeElapsedMs / item.durationMs);
     const isCompleted = progress >= 1;
     const progressPercentage = Math.floor(progress * 100);
+
+    const translatedMilestone = t('health.milestones') as unknown as { title: string; desc: string }[];
+    const currentMilestone = translatedMilestone[index];
 
     let remainingText = '';
     if (!isCompleted) {
       const remainingMs = item.durationMs - timeElapsedMs;
       const remainingHours = remainingMs / (1000 * 60 * 60);
       if (remainingHours < 1) {
-        remainingText = `còn ${Math.ceil(remainingHours * 60)} phút`;
+        remainingText = `${t('health.minLeft').replace('...', Math.ceil(remainingHours * 60).toString())}`;
       } else if (remainingHours < 24) {
-        remainingText = `còn ${Math.floor(remainingHours)} giờ`;
+        remainingText = `${t('health.hourLeft').replace('...', Math.floor(remainingHours).toString())}`;
       } else {
-        remainingText = `còn ${Math.floor(remainingHours / 24)} ngày`;
+        remainingText = `${t('health.dayLeft').replace('...', Math.floor(remainingHours / 24).toString())}`;
       }
     }
 
@@ -328,10 +339,10 @@ export default function HealthScreen() {
         <View style={styles.cardHeader}>
           <View style={styles.titleInfo}>
             <Text style={[styles.milestoneTitle, { color: themeColors.text }]}>
-              {item.title}
+              {currentMilestone.title}
             </Text>
             <Text style={[styles.milestoneDuration, { color: themeColors.tint }]}>
-              Mốc: {item.durationText}
+              {t('health.milestoneMarker')} {item.durationText}
             </Text>
           </View>
           <View
@@ -353,7 +364,7 @@ export default function HealthScreen() {
         </View>
 
         <Text style={[styles.milestoneDesc, { color: themeColors.muted }]}>
-          {item.description}
+          {currentMilestone.desc}
         </Text>
 
         <View style={styles.progressContainer}>
@@ -434,6 +445,55 @@ export default function HealthScreen() {
               </View>
             </View>
           </View>
+
+          {/* 2 hàng: mức thời gian (trên) & % đạt được tương ứng (dưới).
+              Mốc đã đạt được tô màu tint, mốc chưa đạt hiển thị mờ hơn. */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.levelsScroll}
+            contentContainerStyle={styles.levelsScrollContent}
+          >
+            <View>
+              <View style={styles.levelsRow}>
+                {DISPLAY_LEVELS.map((level) => {
+                  const isReached = daysQuit >= level.x;
+                  return (
+                    <View key={`time-${level.label}`} style={styles.levelCell}>
+                      <Text
+                        style={[
+                          styles.levelTimeText,
+                          { color: isReached ? themeColors.tint : themeColors.muted },
+                        ]}
+                      >
+                        {level.label}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+              <View style={styles.levelsRow}>
+                {DISPLAY_LEVELS.map((level) => {
+                  const isReached = daysQuit >= level.x;
+                  return (
+                    <View key={`percent-${level.label}`} style={styles.levelCell}>
+                      <Text
+                        style={[
+                          styles.levelPercentText,
+                          {
+                            color: isReached ? themeColors.text : themeColors.muted,
+                            opacity: isReached ? 1 : 0.5,
+                          },
+                        ]}
+                      >
+                        {level.y}%
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          </ScrollView>
         </View>
 
         <Text style={[styles.listSectionTitle, { color: themeColors.text }]}>{t('health.milestonesTitle')}</Text>
@@ -563,6 +623,29 @@ const styles = StyleSheet.create({
   statDivider: {
     height: 1,
     width: '100%',
+  },
+  levelsScroll: {
+    marginTop: 16,
+  },
+  levelsScrollContent: {
+    paddingTop: 4,
+  },
+  levelsRow: {
+    flexDirection: 'row',
+  },
+  levelCell: {
+    minWidth: 42,
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  levelTimeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  levelPercentText: {
+    fontSize: 12,
+    fontWeight: '800',
   },
   listSectionTitle: {
     fontSize: 16,

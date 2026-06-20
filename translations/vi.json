@@ -69,7 +69,16 @@
     "intensityLow": "Nhẹ",
     "intensityMedium": "Vừa",
     "intensityHigh": "Mạnh",
-    "saveLog": "Lưu Nhật Ký"
+    "saveLog": "Lưu Nhật Ký",
+    "triggers": {
+      "stress": "Căng thẳng (Stress)",
+      "afterMeal": "Sau bữa ăn",
+      "coffeeAlcohol": "Uống cà phê/bia rượu",
+      "boredom": "Buồn chán",
+      "habit": "Theo thói quen",
+      "friends": "Bạn bè rủ rê",
+      "other": "Khác"
+    }
   },
   "health": {
     "title": "Sức Khỏe Phục Hồi",
@@ -77,6 +86,22 @@
     "chartTitle": "Biểu đồ phục hồi tổng hợp",
     "recovery": "hồi phục",
     "daysQuit": "ngày không hút thuốc",
-    "milestonesTitle": "Các mốc hồi phục sinh học"
+    "milestonesTitle": "Các mốc hồi phục sinh học",
+    "milestoneMarker": "Mốc:",
+    "minLeft": "còn ... phút",
+    "hourLeft": "còn ... giờ",
+    "dayLeft": "còn ... ngày",
+    "milestones": [
+      { "title": "Huyết áp & Nhịp tim", "desc": "Huyết áp và nhịp tim của bạn bắt đầu giảm trở lại mức bình thường. Các chi bắt đầu ấm lên." },
+      { "title": "Khí Carbon Monoxide", "desc": "Nồng độ khí CO độc hại trong máu giảm một nửa. Nồng độ oxy trong máu phục hồi về mức bình thường." },
+      { "title": "Thải lọc CO hoàn toàn", "desc": "Carbon monoxide được đào thải hoàn toàn khỏi cơ thể. Phổi bắt đầu quá trình tự làm sạch chất độc và đờm bám." },
+      { "title": "Đào thải hoàn toàn Nicotine", "desc": "Toàn bộ chất nicotine đã được lọc bỏ. Vị giác và khứu giác của bạn bắt đầu nhạy bén và ăn uống ngon miệng hơn." },
+      { "title": "Hít thở Dễ dàng", "desc": "Các ống phế quản trong phổi bắt đầu giãn ra và thư thái. Dung tích phổi tăng lên, giúp thở sâu nhẹ nhàng." },
+      { "title": "Tuần hoàn Máu & Thể lực", "desc": "Hệ tuần hoàn máu cải thiện rõ rệt khắp cơ thể. Các hoạt động thể chất, đi bộ hay chạy bộ bắt đầu ít bị mệt hơn." },
+      { "title": "Chức năng Phổi khỏe mạnh", "desc": "Chức năng lọc và hấp thụ oxy của phổi tăng lên đến 10%. Các triệu chứng ho khan, khò khè giảm rõ rệt." },
+      { "title": "Giảm nguy cơ Bệnh tim", "desc": "Nguy cơ mắc bệnh tim mạch vành và nhồi máu cơ tim giảm đi một nửa so với thời điểm bạn còn hút thuốc." },
+      { "title": "Ngừa Đột quỵ", "desc": "Nguy cơ đột quỵ được giảm thiểu đáng kể, trở lại mức tương đương như một người chưa từng hút thuốc lá." },
+      { "title": "Ngăn ngừa Ung thư Phổi", "desc": "Nguy cơ tử vong do ung thư phổi giảm xuống một nửa. Nguy cơ mắc các bệnh ung thư vòm họng, thực quản cũng giảm mạnh." }
+    ]
   }
 }

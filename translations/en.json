@@ -69,7 +69,16 @@
     "intensityLow": "Low",
     "intensityMedium": "Medium",
     "intensityHigh": "High",
-    "saveLog": "Save Log"
+    "saveLog": "Save Log",
+    "triggers": {
+      "stress": "Căng thẳng (Stress)",
+      "afterMeal": "After meal",
+      "coffeeAlcohol": "Coffee/Alcohol",
+      "boredom": "Boredom",
+      "habit": "Habit",
+      "friends": "Friends",
+      "other": "Other"
+    }
   },
   "health": {
     "title": "Health Recovery",
@@ -77,6 +86,22 @@
     "chartTitle": "Summary recovery chart",
     "recovery": "recovered",
     "daysQuit": "smoke-free days",
-    "milestonesTitle": "Biological recovery milestones"
+    "milestonesTitle": "Biological recovery milestones",
+    "milestoneMarker": "Milestone:",
+    "minLeft": "min left",
+    "hourLeft": "h left",
+    "dayLeft": "d left",
+    "milestones": [
+      { "title": "Blood Pressure & Heart Rate", "desc": "Blood pressure and heart rate begin to return to normal. Extremities start to warm up." },
+      { "title": "Carbon Monoxide", "desc": "Toxic carbon monoxide levels in your blood are reduced by half. Oxygen levels return to normal." },
+      { "title": "CO Clearance", "desc": "Carbon monoxide is completely cleared from the body. Lungs begin self-cleaning of toxins and mucus." },
+      { "title": "Nicotine Clearance", "desc": "All nicotine is filtered out. Taste and smell start to sharpen, making food taste better." },
+      { "title": "Easier Breathing", "desc": "Bronchial tubes in the lungs begin to relax. Lung capacity increases, making deep breathing easier." },
+      { "title": "Circulation & Fitness", "desc": "Blood circulation improves throughout the body. Physical activities like walking or running start to feel easier." },
+      { "title": "Healthy Lung Function", "desc": "Lung filtration and oxygen absorption increase by up to 10%. Coughing and wheezing decrease significantly." },
+      { "title": "Reduced Heart Risk", "desc": "Risk of coronary heart disease and heart attack is reduced by half compared to when you smoked." },
+      { "title": "Stroke Prevention", "desc": "Stroke risk is significantly reduced, returning to a level comparable to a never-smoker." },
+      { "title": "Lung Cancer Prevention", "desc": "Risk of lung cancer death is reduced by half. Risk of throat and esophageal cancer also decreases significantly." }
+    ]
   }
 }

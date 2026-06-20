@@ -322,94 +322,107 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
 
-      {/* Counter Card */}
-      <View style={[styles.counterCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-        <Text style={styles.counterHeader}>{t('home.timerHeader')}</Text>
-        <View style={styles.timerGrid}>
-          <View style={styles.timerBlock}>
-            <Text style={[styles.timerNum, { color: themeColors.tint }]}>{timeElapsed.d}</Text>
-            <Text style={[styles.timerLabel, { color: themeColors.muted }]}>{t('home.days')}</Text>
+        {/* Counter Card */}
+        <View style={[styles.counterCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <Text style={styles.counterHeader}>{t('home.timerHeader')}</Text>
+          <View style={styles.timerGrid}>
+            <View style={styles.timerBlock}>
+              <Text style={[styles.timerNum, { color: themeColors.tint }]}>{timeElapsed.d}</Text>
+              <Text style={[styles.timerLabel, { color: themeColors.muted }]}>{t('home.days')}</Text>
+            </View>
+            <View style={styles.timerSeparator}>
+              <Text style={[styles.timerSepText, { color: themeColors.tint }]}>:</Text>
+            </View>
+            <View style={styles.timerBlock}>
+              <Text style={[styles.timerNum, { color: themeColors.tint }]}>{timeElapsed.h}</Text>
+              <Text style={[styles.timerLabel, { color: themeColors.muted }]}>{t('home.hours')}</Text>
+            </View>
+            <View style={styles.timerSeparator}>
+              <Text style={[styles.timerSepText, { color: themeColors.tint }]}>:</Text>
+            </View>
+            <View style={styles.timerBlock}>
+              <Text style={[styles.timerNum, { color: themeColors.tint }]}>{timeElapsed.m}</Text>
+              <Text style={[styles.timerLabel, { color: themeColors.muted }]}>{t('home.minutes')}</Text>
+            </View>
+            <View style={styles.timerSeparator}>
+              <Text style={[styles.timerSepText, { color: themeColors.tint }]}>:</Text>
+            </View>
+            <View style={styles.timerBlock}>
+              <Text style={[styles.timerNum, { color: themeColors.tint }]}>{timeElapsed.s}</Text>
+              <Text style={[styles.timerLabel, { color: themeColors.muted }]}>{t('home.seconds')}</Text>
+            </View>
           </View>
-          <View style={styles.timerSeparator}>
-            <Text style={[styles.timerSepText, { color: themeColors.tint }]}>:</Text>
+          <View style={[styles.quitBadge, { backgroundColor: themeColors.tint + '15' }]}>
+            <Text style={[styles.quitBadgeText, { color: themeColors.tint }]}>
+              {t('home.startDate')} {quitDateObj.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US')} {quitDateObj.toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+            </Text>
           </View>
-          <View style={styles.timerBlock}>
-            <Text style={[styles.timerNum, { color: themeColors.tint }]}>{timeElapsed.h}</Text>
-            <Text style={[styles.timerLabel, { color: themeColors.muted }]}>{t('home.hours')}</Text>
-          </View>
-          <View style={styles.timerSeparator}>
-            <Text style={[styles.timerSepText, { color: themeColors.tint }]}>:</Text>
-          </View>
-          <View style={styles.timerBlock}>
-            <Text style={[styles.timerNum, { color: themeColors.tint }]}>{timeElapsed.m}</Text>
-            <Text style={[styles.timerLabel, { color: themeColors.muted }]}>{t('home.minutes')}</Text>
-          </View>
-          <View style={styles.timerSeparator}>
-            <Text style={[styles.timerSepText, { color: themeColors.tint }]}>:</Text>
-          </View>
-          <View style={styles.timerBlock}>
-            <Text style={[styles.timerNum, { color: themeColors.tint }]}>{timeElapsed.s}</Text>
-            <Text style={[styles.timerLabel, { color: themeColors.muted }]}>{t('home.seconds')}</Text>
-          </View>
-        </View>
-        <View style={[styles.quitBadge, { backgroundColor: themeColors.tint + '15' }]}>
-          <Text style={[styles.quitBadgeText, { color: themeColors.tint }]}>
-            {t('home.startDate')} {quitDateObj.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US')} {quitDateObj.toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
-          </Text>
-        </View>
-      </View>
-
-      {/* Grid Stats */}
-      <View style={styles.statsGrid}>
-        {/* Stat 1: Money saved */}
-        <View style={[styles.statBox, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-          <View style={[styles.statIconCircle, { backgroundColor: '#10B98120' }]}>
-            <IconSymbol size={20} name="house.fill" color="#10B981" />
-          </View>
-          <Text style={[styles.statValue, { color: themeColors.text }]}>
-            {formatCurrency(moneySaved)}
-          </Text>
-          <Text style={[styles.statLabel, { color: themeColors.muted }]}>{t('home.moneySaved')}</Text>
         </View>
 
-        {/* Stat 2: Cigarettes avoided */}
-        <View style={[styles.statBox, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-          <View style={[styles.statIconCircle, { backgroundColor: '#F59E0B20' }]}>
-            <IconSymbol size={20} name="heart.fill" color="#F59E0B" />
+        {/* Grid Stats */}
+        <View style={styles.statsGrid}>
+          {/* Stat 1: Money saved */}
+          <View style={[styles.statBox, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <View style={[styles.statIconCircle, { backgroundColor: '#10B98120' }]}>
+              <IconSymbol size={20} name="house.fill" color="#10B981" />
+            </View>
+            <Text style={[styles.statValue, { color: themeColors.text }]}>
+              {formatCurrency(moneySaved)}
+            </Text>
+            <Text style={[styles.statLabel, { color: themeColors.muted }]}>{t('home.moneySaved')}</Text>
           </View>
-          <Text style={[styles.statValue, { color: themeColors.text }]}>
-            {cigarettesAvoided} {t('home.cigarettes')}
-          </Text>
-          <Text style={[styles.statLabel, { color: themeColors.muted }]}>{t('home.cigarettesAvoided')}</Text>
-        </View>
-      </View>
 
-      {/* Large Stat Box: Life Regained */}
-      <View style={[styles.largeStatCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-        <View style={[styles.statIconCircle, { backgroundColor: '#0EA5E920' }]}>
-          <IconSymbol size={22} name="heart.fill" color="#0EA5E9" />
+          {/* Stat 2: Cigarettes avoided */}
+          <View style={[styles.statBox, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <View style={[styles.statIconCircle, { backgroundColor: '#F59E0B20' }]}>
+              <IconSymbol size={20} name="heart.fill" color="#F59E0B" />
+            </View>
+            <Text style={[styles.statValue, { color: themeColors.text }]}>
+              {cigarettesAvoided} {t('home.cigarettes')}
+            </Text>
+            <Text style={[styles.statLabel, { color: themeColors.muted }]}>{t('home.cigarettesAvoided')}</Text>
+          </View>
         </View>
-        <View style={styles.largeStatInfo}>
-          <Text style={[styles.largeStatValue, { color: themeColors.text }]}>
-            +{formatLifeRegained(lifeRegainedMinutes)}
-          </Text>
-          <Text style={[styles.largeStatLabel, { color: themeColors.muted }]}>
-            {t('home.lifeRegainedDesc')}
-          </Text>
-        </View>
-      </View>
 
-      {/* Tips / Info Banner */}
-      <View style={[styles.tipsCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-        <View style={styles.tipHeader}>
-          <IconSymbol size={20} name="heart.fill" color={themeColors.tint} />
-          <Text style={[styles.tipTitle, { color: themeColors.text }]}>{t('home.tipsTitle')}</Text>
+        {/* Large Stat Box: Life Regained */}
+        <View style={[styles.largeStatCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <View style={[styles.statIconCircle, { backgroundColor: '#0EA5E920' }]}>
+            <IconSymbol size={22} name="heart.fill" color="#0EA5E9" />
+          </View>
+          <View style={styles.largeStatInfo}>
+            <Text style={[styles.largeStatValue, { color: themeColors.text }]}>
+              +{formatLifeRegained(lifeRegainedMinutes)}
+            </Text>
+            <Text style={[styles.largeStatLabel, { color: themeColors.muted }]}>
+              {t('home.lifeRegainedDesc')}
+            </Text>
+          </View>
         </View>
-        <Text style={[styles.tipBody, { color: themeColors.muted }]}>
-          {t('home.tipsBody')}
-        </Text>
-      </View>
-    </ScrollView>
+
+        {/* Motivational Quote Card */}
+        <View style={[styles.quoteCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <IconSymbol
+            size={22}
+            name="heart.fill"
+            color={themeColors.tint}
+            style={styles.quoteIcon}
+          />
+          <Text style={[styles.quoteText, { color: themeColors.text }]}>
+            {MOTIVATIONAL_QUOTES[quoteIndex]}
+          </Text>
+        </View>
+
+        {/* Tips / Info Banner */}
+        <View style={[styles.tipsCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <View style={styles.tipHeader}>
+            <IconSymbol size={20} name="heart.fill" color={themeColors.tint} />
+            <Text style={[styles.tipTitle, { color: themeColors.text }]}>{t('home.tipsTitle')}</Text>
+          </View>
+          <Text style={[styles.tipBody, { color: themeColors.muted }]}>
+            {t('home.tipsBody')}
+          </Text>
+        </View>
+      </ScrollView>
     </View>
   );
 }

@@ -42,13 +42,13 @@ export default function CravingsScreen() {
   ];
 
   const TRIGGERS = [
-    'Căng thẳng (Stress)',
-    'Sau bữa ăn',
-    'Uống cà phê/bia rượu',
-    'Buồn chán',
-    'Theo thói quen',
-    'Bạn bè rủ rê',
-    'Khác',
+    t('cravings.triggers.stress'),
+    t('cravings.triggers.afterMeal'),
+    t('cravings.triggers.coffeeAlcohol'),
+    t('cravings.triggers.boredom'),
+    t('cravings.triggers.habit'),
+    t('cravings.triggers.friends'),
+    t('cravings.triggers.other'),
   ];
 
   // Cravings Log States
