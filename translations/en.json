@@ -49,7 +49,16 @@
     "setup1h": "1h ago",
     "setup3h": "3h ago",
     "setup1d": "Yesterday",
-    "setup3d": "3 days ago"
+    "setup3d": "3 days ago",
+    "quotes": [
+      "Every second you don't smoke is a victory for your lungs.",
+      "The money saved today will build your future tomorrow.",
+      "Take a deep breath. This fresh air belongs to you.",
+      "You are stronger than your cravings. Cravings only last 3-5 minutes!",
+      "Your family and loved ones are proud of your determination.",
+      "Value your own health. You deserve a healthy life.",
+      "Every cigarette refused is a step closer to freedom."
+    ]
   },
   "cravings": {
     "title": "Cravings Support",

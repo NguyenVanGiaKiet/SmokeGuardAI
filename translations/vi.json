@@ -49,7 +49,16 @@
     "setup1h": "1 giờ trước",
     "setup3h": "3 giờ trước",
     "setup1d": "Hôm qua",
-    "setup3d": "3 ngày trước"
+    "setup3d": "3 ngày trước",
+    "quotes": [
+      "Mỗi giây phút bạn không hút thuốc là một chiến thắng cho phổi của bạn.",
+      "Tiền tiết kiệm được hôm nay sẽ xây dựng tương lai ngày mai.",
+      "Hít một hơi thật sâu. Không khí trong lành này thuộc về bạn.",
+      "Bạn mạnh mẽ hơn cơn thèm thuốc. Cơn thèm chỉ kéo dài từ 3-5 phút thôi!",
+      "Gia đình và người thân yêu đang tự hào về quyết tâm của bạn.",
+      "Hãy trân trọng sức khỏe của chính mình. Bạn xứng đáng có một cuộc sống lành mạnh.",
+      "Mỗi điếu thuốc bị từ chối là một bước tiến gần hơn đến tự do."
+    ]
   },
   "cravings": {
     "title": "Hỗ Trợ Cơn Thèm",

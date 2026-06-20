@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,6 +10,11 @@ import {
   Dimensions,
   Platform,
   Alert,
+  Image,
+  LayoutAnimation,
+  UIManager,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
@@ -30,14 +35,21 @@ interface UserData {
 
 const STORAGE_KEY = '@BreatheFree:userData';
 
-const MOTIVATIONAL_QUOTES = [
-  "Mỗi giây phút bạn không hút thuốc là một chiến thắng cho phổi của bạn.",
-  "Tiền tiết kiệm được hôm nay sẽ xây dựng tương lai ngày mai.",
-  "Hít một hơi thật sâu. Không khí trong lành này thuộc về bạn.",
-  "Bạn mạnh mẽ hơn cơn thèm thuốc. Cơn thèm chỉ kéo dài từ 3-5 phút thôi!",
-  "Gia đình và người thân yêu đang tự hào về quyết tâm của bạn.",
-  "Hãy trân trọng sức khỏe của chính mình. Bạn xứng đáng có một cuộc sống lành mạnh.",
-  "Mỗi điếu thuốc bị từ chối là một bước tiến gần hơn đến tự do.",
+// LayoutAnimation cần được bật thủ công trên Android (mặc định tắt) để dot indicator
+// đổi kích thước mượt thay vì nhảy giật.
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+// Ảnh minh hoạ tác hại của thuốc lá — đặt file trong thư mục /assets/images/harms/
+// và đổi lại tên file bên dưới cho khớp với ảnh thật của bạn.
+const HARM_IMAGES = [
+  require('@/assets/images/index/1042361_A30-a-11.jpg'),
+  require('@/assets/images/index/1042362_A30-a-12.jpg'),
+  require('@/assets/images/index/1042363_A30-a-13.jpg'),
+  require('@/assets/images/index/1042364_A30-a-14.jpg'),
+  require('@/assets/images/index/1042365_A30-a-15.jpg'),
+  require('@/assets/images/index/1042366_A30-a-16.jpg'),
 ];
 
 export default function HomeScreen() {
@@ -58,6 +70,15 @@ export default function HomeScreen() {
   const [timeElapsed, setTimeElapsed] = useState({ d: 0, h: 0, m: 0, s: 0 });
   const [quoteIndex, setQuoteIndex] = useState(0);
 
+  // Harm-image slider state
+  const [harmSlideIndex, setHarmSlideIndex] = useState(0);
+  const [harmAutoPlay, setHarmAutoPlay] = useState(true);
+  const harmScrollRef = useRef<ScrollView>(null);
+  const harmResumeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const harmSlideWidth = width - 40; // khớp với paddingHorizontal: 20 của dashboardScroll
+
+  const quotes = t('home.quotes') as unknown as string[];
+
   // Fetch data on focus
   useFocusEffect(
     useCallback(() => {
@@ -68,10 +89,39 @@ export default function HomeScreen() {
   // Rotate quote every 15 seconds
   useEffect(() => {
     const quoteInterval = setInterval(() => {
-      setQuoteIndex((prev) => (prev + 1) % MOTIVATIONAL_QUOTES.length);
+      setQuoteIndex((prev) => (prev + 1) % quotes.length);
     }, 15000);
     return () => clearInterval(quoteInterval);
-  }, []);
+  }, [quotes]);
+
+  // Tự động chuyển slide ảnh tác hại mỗi 3 giây — dừng hẳn khi người dùng chạm vào slider.
+  useFocusEffect(
+    useCallback(() => {
+      // Khi quay lại màn hình, hãy cuộn về đúng vị trí slide hiện tại để đồng bộ hóa
+      // Sử dụng setTimeout để đảm bảo View đã được render sẵn sàng.
+      const timer = setTimeout(() => {
+        harmScrollRef.current?.scrollTo({ x: harmSlideIndex * harmSlideWidth, animated: false });
+      }, 50);
+
+      if (!harmAutoPlay || HARM_IMAGES.length <= 1) {
+        return () => clearTimeout(timer);
+      }
+
+      const harmInterval = setInterval(() => {
+        setHarmSlideIndex((prev) => {
+          const next = (prev + 1) % HARM_IMAGES.length;
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+          harmScrollRef.current?.scrollTo({ x: next * harmSlideWidth, animated: true });
+          return next;
+        });
+      }, 3000);
+
+      return () => {
+        clearTimeout(timer);
+        clearInterval(harmInterval);
+      };
+    }, [harmAutoPlay, harmSlideWidth, harmSlideIndex])
+  );
 
   // Update counter every second
   useEffect(() => {
@@ -156,6 +206,53 @@ export default function HomeScreen() {
     } finally {
     }
   };
+
+  // Chỉ tính lại index khi cuộn ĐÃ DỪNG hẳn (kéo tay xong / hết đà trượt).
+  // Trước đây dùng onScroll (bắn liên tục mỗi 16ms) nên trong lúc auto-chuyển slide
+  // đang animate, nó tính ra index "giữa chừng" rồi ghi đè lại index cũ -> dot bị giật/nháy.
+  const updateHarmIndexFromOffset = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = e.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / harmSlideWidth);
+    setHarmSlideIndex((prev) => {
+      if (index === prev) return prev;
+      if (Platform.OS === 'android' || Platform.OS === 'ios') {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      }
+      return index;
+    });
+  };
+
+  // Người dùng chạm/kéo vào slider -> tạm tắt auto chuyển slide.
+  const HARM_RESUME_DELAY = 3000; // ms không thao tác trước khi auto chuyển lại
+
+  const handleHarmSlideTouchStart = () => {
+    if (harmResumeTimeout.current) {
+      clearTimeout(harmResumeTimeout.current);
+      harmResumeTimeout.current = null;
+    }
+    if (harmAutoPlay) setHarmAutoPlay(false);
+  };
+
+  // Khi người dùng buông tay / kết thúc thao tác kéo -> đợi một lúc rồi tự bật auto lại.
+  const handleHarmSlideTouchEnd = () => {
+    if (harmResumeTimeout.current) clearTimeout(harmResumeTimeout.current);
+    harmResumeTimeout.current = setTimeout(() => {
+      setHarmAutoPlay(true);
+      harmResumeTimeout.current = null;
+    }, HARM_RESUME_DELAY);
+  };
+
+  // Cuộn kết thúc (do tay kéo hoặc trớn trượt) -> chốt lại index đúng + khởi động lại đếm giờ resume.
+  const handleHarmSlideSettled = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    updateHarmIndexFromOffset(e);
+    handleHarmSlideTouchEnd();
+  };
+
+  useEffect(() => {
+    return () => {
+      if (harmResumeTimeout.current) clearTimeout(harmResumeTimeout.current);
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -399,6 +496,53 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {/* Harm Images Slider — ảnh minh hoạ tác hại của thuốc lá */}
+        <View style={styles.harmSliderWrapper}>
+          <Text style={[styles.harmSliderTitle, { color: themeColors.text }]}>
+            Những tác hại khi hút thuốc lá
+          </Text>
+          <ScrollView
+            ref={harmScrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onTouchStart={handleHarmSlideTouchStart}
+            onTouchEnd={handleHarmSlideTouchEnd}
+            onScrollBeginDrag={handleHarmSlideTouchStart}
+            onScrollEndDrag={handleHarmSlideSettled}
+            onMomentumScrollEnd={handleHarmSlideSettled}
+          >
+            {HARM_IMAGES.map((img, idx) => (
+              <View key={idx} style={[styles.harmSlide, { width: harmSlideWidth }]}>
+                <Image
+                  source={img}
+                  style={[
+                    styles.harmImage,
+                    { width: harmSlideWidth, borderColor: themeColors.border },
+                  ]}
+                  resizeMode="cover"
+                />
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* Dot indicators */}
+          <View style={styles.harmDotsRow}>
+            {HARM_IMAGES.map((_, idx) => (
+              <View
+                key={idx}
+                style={[
+                  styles.harmDot,
+                  {
+                    backgroundColor: idx === harmSlideIndex ? themeColors.tint : themeColors.border,
+                    width: idx === harmSlideIndex ? 18 : 6,
+                  },
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+
         {/* Motivational Quote Card */}
         <View style={[styles.quoteCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
           <IconSymbol
@@ -408,7 +552,7 @@ export default function HomeScreen() {
             style={styles.quoteIcon}
           />
           <Text style={[styles.quoteText, { color: themeColors.text }]}>
-            {MOTIVATIONAL_QUOTES[quoteIndex]}
+            {quotes[quoteIndex]}
           </Text>
         </View>
 
@@ -666,6 +810,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,
+  },
+  harmSliderTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 12,
+    marginLeft: 4,
+  },
+  harmSliderWrapper: {
+    marginBottom: 20,
+  },
+  harmSlide: {
+    alignItems: 'center',
+  },
+  harmImage: {
+    height: 180,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  harmDotsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 10,
+  },
+  harmDot: {
+    height: 6,
+    borderRadius: 3,
   },
   quoteCard: {
     borderRadius: 20,
