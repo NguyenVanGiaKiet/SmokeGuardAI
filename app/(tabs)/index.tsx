@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   StyleSheet,
   View,
@@ -35,6 +35,34 @@ interface UserData {
 
 const STORAGE_KEY = '@BreatheFree:userData';
 
+// Streak is reset to 0 if the user hasn't opened the app for more than this long
+const STREAK_RESET_THRESHOLD_MS = 24 * 60 * 60 * 1000;
+// Minimum streak (in days) required for the flame icon/text to show as "active" (colored)
+const STREAK_ACTIVE_THRESHOLD_DAYS = 3;
+
+// Calculate streak (in days quit), reset to 0 if the user was away for more than 24h
+const calculateStreak = (quitDate: string, lastOpened: string | null) => {
+  const quitTime = new Date(quitDate);
+  const lastOpenTime = lastOpened ? new Date(lastOpened) : null;
+  const now = new Date();
+
+  // If more than 24 hours have passed since the user last opened the app, streak is broken
+  if (lastOpenTime && now.getTime() - lastOpenTime.getTime() > STREAK_RESET_THRESHOLD_MS) {
+    return 0;
+  }
+
+  // Zero out time-of-day so we count full calendar days
+  const quitMidnight = new Date(quitTime);
+  quitMidnight.setHours(0, 0, 0, 0);
+  const nowMidnight = new Date(now);
+  nowMidnight.setHours(0, 0, 0, 0);
+
+  const diffTime = Math.abs(nowMidnight.getTime() - quitMidnight.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  return diffDays;
+};
+
 export default function HomeScreen() {
   const { activeScheme } = useTheme();
   const { language, t } = useLanguage();
@@ -62,38 +90,19 @@ export default function HomeScreen() {
 
   const quotes = t('home.quotes') as unknown as string[];
 
-  // State for last opened date
+  // State for last opened date. null = "still loading", undefined-like sentinel handled via isLastOpenedLoaded
   const [lastOpened, setLastOpened] = useState<string | null>(null);
+  const [isLastOpenedLoaded, setIsLastOpenedLoaded] = useState(false);
 
   useEffect(() => {
     const getLastOpened = async () => {
-        const last = await AsyncStorage.getItem('@BreatheFree:lastOpened');
-        setLastOpened(last);
-        await AsyncStorage.setItem('@BreatheFree:lastOpened', new Date().toISOString());
+      const last = await AsyncStorage.getItem('@BreatheFree:lastOpened');
+      setLastOpened(last);
+      setIsLastOpenedLoaded(true);
+      await AsyncStorage.setItem('@BreatheFree:lastOpened', new Date().toISOString());
     };
     getLastOpened();
   }, []);
-
-  // Calculate streaks
-  const calculateStreak = (quitDate: string, lastOpened: string | null) => {
-    const quitTime = new Date(quitDate);
-    const lastOpenTime = lastOpened ? new Date(lastOpened) : new Date();
-    const now = new Date();
-    
-    // Check if more than 24 hours have passed since last opened
-    if (lastOpened && (now.getTime() - lastOpenTime.getTime() > 24 * 60 * 60 * 1000)) {
-        return 0; // Streak broken
-    }
-
-    // Set both to midnight to count full days
-    quitTime.setHours(0, 0, 0, 0);
-    now.setHours(0, 0, 0, 0);
-    
-    const diffTime = Math.abs(now.getTime() - quitTime.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    return diffDays;
-  };
 
   // Fetch data on focus
   useFocusEffect(
@@ -194,6 +203,15 @@ export default function HomeScreen() {
     } finally {
     }
   };
+
+  // Single source of truth for the streak value, recalculated only when its inputs change.
+  // While lastOpened hasn't finished loading yet, we hold off so we never flash a wrong value.
+  const currentStreak = useMemo(() => {
+    if (!userData || !isLastOpenedLoaded) return 0;
+    return calculateStreak(userData.quitDate, lastOpened);
+  }, [userData, lastOpened, isLastOpenedLoaded]);
+
+  const isStreakActive = currentStreak >= STREAK_ACTIVE_THRESHOLD_DAYS;
 
   if (isLoading) {
     return (
@@ -361,21 +379,28 @@ export default function HomeScreen() {
       >
 
         {/* Streak Card */}
-        <View style={[styles.streakCard, { backgroundColor: themeColors.card, borderColor: (userData ? calculateStreak(userData.quitDate, lastOpened) : 0) >= 3 ? themeColors.tint : themeColors.border }]}>
+        <View
+          style={[
+            styles.streakCard,
+            {
+              backgroundColor: themeColors.card,
+              borderColor: isStreakActive ? themeColors.tint : themeColors.border,
+            },
+          ]}
+        >
           <View style={styles.streakInfo}>
             <View style={styles.streakHeader}>
-                <IconSymbol 
-                    size={24} 
-                    name="flame.fill" 
-                    color={(userData ? calculateStreak(userData.quitDate, lastOpened) : 0) >= 3 ? themeColors.tint : themeColors.muted} 
-                />
-                <Text style={[styles.streakTitle, { color: themeColors.text, marginLeft: 8 }]}>
+              <IconSymbol
+                size={24}
+                name="flame.fill"
+                color={isStreakActive ? themeColors.tint : themeColors.muted}
+              />
+              <Text style={[styles.streakTitle, { color: themeColors.text, marginLeft: 8 }]}>
                 {t('home.streakTitle') || 'Streaks'}
-                </Text>
-
+              </Text>
             </View>
-            <Text style={[styles.streakDays, { color: (userData ? calculateStreak(userData.quitDate, lastOpened) : 0) >= 3 ? themeColors.tint : themeColors.text }]}>
-              {userData ? calculateStreak(userData.quitDate, lastOpened) : 0} {t('home.days') || 'days'}
+            <Text style={[styles.streakDays, { color: isStreakActive ? themeColors.tint : themeColors.text }]}>
+              {currentStreak} {t('home.days') || 'days'}
             </Text>
           </View>
         </View>
