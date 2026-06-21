@@ -10,17 +10,17 @@ interface RunLog {
   distance: string;
 }
 
-export const RunningHistory = ({
+const HistoryItem = React.memo(({
+  item,
   themeColors,
-  history,
+  t,
   onDelete,
 }: {
+  item: RunLog;
   themeColors: any;
-  history: RunLog[];
+  t: (key: string) => string;
   onDelete: (id: string) => void;
 }) => {
-  const { t } = useLanguage();
-
   const confirmDelete = (id: string) => {
     Alert.alert(
       t('cravings.running.deleteHistory'),
@@ -32,7 +32,7 @@ export const RunningHistory = ({
     );
   };
 
-  const renderItem = ({ item }: { item: RunLog }) => (
+  return (
     <View style={[styles.historyItem, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
       <View style={styles.historyInfo}>
         <Text style={[styles.dateText, { color: themeColors.muted }]}>
@@ -46,6 +46,22 @@ export const RunningHistory = ({
       </TouchableOpacity>
     </View>
   );
+});
+
+export const RunningHistory = ({
+  themeColors,
+  history,
+  onDelete,
+}: {
+  themeColors: any;
+  history: RunLog[];
+  onDelete: (id: string) => void;
+}) => {
+  const { t } = useLanguage();
+
+  const renderItem = React.useCallback(({ item }: { item: RunLog }) => (
+    <HistoryItem item={item} themeColors={themeColors} t={t} onDelete={onDelete} />
+  ), [themeColors, t, onDelete]);
 
   return (
     <View style={styles.container}>
@@ -64,6 +80,7 @@ export const RunningHistory = ({
     </View>
   );
 };
+
 
 
 

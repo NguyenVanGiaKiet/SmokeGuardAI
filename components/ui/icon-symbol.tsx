@@ -25,6 +25,9 @@ const MAPPING = {
   'message.fill': 'message',
   'flame.fill': 'local-fire-department',
   'figure.run': 'directions-run',
+  'arrow.up': 'arrow-upward',
+  'sparkles': 'auto-awesome',
+  'arrow.down': 'arrow-downward',
   } as const;
 
 type IconSymbolName = keyof typeof MAPPING;

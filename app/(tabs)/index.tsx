@@ -16,6 +16,7 @@ import { useTheme } from '@/context/theme-context';
 import { useLanguage } from '@/context/language-context';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { scheduleDailyReminder } from '@/utils/notifications';
+import { calculateSmokingRisk, CravingLog } from '@/utils/ai-predictor';
 
 const { width } = Dimensions.get('window');
 
@@ -27,6 +28,7 @@ interface UserData {
 }
 
 const STORAGE_KEY = '@SmokeGuardAI:userData';
+const STORAGE_KEY_LOGS = '@SmokeGuardAI:cravingLogs';
 
 // Streak is reset to 0 if the user hasn't opened the app for more than this long
 const STREAK_RESET_THRESHOLD_MS = 24 * 60 * 60 * 1000;
@@ -73,6 +75,7 @@ export default function HomeScreen() {
   // State for last opened date. null = "still loading", undefined-like sentinel handled via isLastOpenedLoaded
   const [lastOpened, setLastOpened] = useState<string | null>(null);
   const [isLastOpenedLoaded, setIsLastOpenedLoaded] = useState(false);
+  const [riskAssessment, setRiskAssessment] = useState<any>(null);
 
   useEffect(() => {
     const getLastOpened = async () => {
@@ -141,6 +144,14 @@ export default function HomeScreen() {
       const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
       if (jsonValue != null) {
         setUserData(JSON.parse(jsonValue));
+      }
+      
+      // Calculate risk
+      const logsJson = await AsyncStorage.getItem(STORAGE_KEY_LOGS);
+      const logs: CravingLog[] = logsJson ? JSON.parse(logsJson) : [];
+      if (jsonValue) {
+        const user = JSON.parse(jsonValue);
+        setRiskAssessment(calculateSmokingRisk(logs, user.quitDate));
       }
     } catch (e) {
       console.error('Failed to load user data', e);
@@ -236,6 +247,15 @@ export default function HomeScreen() {
             </Text>
           </View>
         </View>
+
+        {/* Risk Assessment Card */}
+        {riskAssessment && (
+          <View style={[styles.riskCard, { backgroundColor: themeColors.card, borderColor: riskAssessment.level === 'High' ? themeColors.danger : themeColors.border }]}>
+            <Text style={[styles.cardTitle, { color: themeColors.text }]}>Nguy cơ hút thuốc</Text>
+            <Text style={{ color: themeColors.text }}>Mức độ: {riskAssessment.level}</Text>
+            <Text style={{ color: themeColors.muted }}>{riskAssessment.message}</Text>
+          </View>
+        )}
 
         {/* Counter Card */}
         <View style={[styles.counterCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
@@ -551,5 +571,16 @@ const styles = StyleSheet.create({
   streakDays: {
     fontSize: 32,
     fontWeight: '900',
+  },
+  riskCard: {
+    borderRadius: 24,
+    borderWidth: 1.5,
+    padding: 20,
+    marginBottom: 20,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 10,
   },
 });

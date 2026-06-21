@@ -177,6 +177,7 @@ const AnimatedTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) =
           let iconName = 'house.fill';
           if (route.name === 'health') iconName = 'heart.fill';
           else if (route.name === 'cravings') iconName = 'leaf.fill';
+          else if (route.name === 'coach') iconName = 'message.fill';
           else if (route.name === 'discover') iconName = 'book.fill';
           else if (route.name === 'profile') iconName = 'person.fill';
 
@@ -221,6 +222,12 @@ export default function TabLayout() {
         name="cravings"
         options={{
           title: 'Cơn thèm',
+        }}
+      />
+      <Tabs.Screen
+        name="coach"
+        options={{
+          title: 'Coach',
         }}
       />
       <Tabs.Screen
