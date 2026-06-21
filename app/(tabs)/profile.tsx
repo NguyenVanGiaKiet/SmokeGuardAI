@@ -22,6 +22,7 @@ import { useFonts, Kalam_700Bold } from '@expo-google-fonts/kalam';
 
 const STORAGE_KEY = '@BreatheFree:userData';
 const STORAGE_KEY_LOGS = '@BreatheFree:cravingLogs';
+const STORAGE_KEY_RUNS = '@BreatheFree:runLogs';
 
 interface UserData {
   cigarettesPerDay: number;
@@ -171,6 +172,7 @@ export default function ProfileScreen() {
               setIsLoading(true);
               await AsyncStorage.removeItem(STORAGE_KEY);
               await AsyncStorage.removeItem(STORAGE_KEY_LOGS);
+              await AsyncStorage.removeItem(STORAGE_KEY_RUNS);
               setUserData(null);
               setCravingsCount(0);
               Alert.alert('Đã xóa', 'Toàn bộ dữ liệu đã được đặt lại.');
