@@ -4,20 +4,13 @@ import {
   View,
   Text,
   ScrollView,
-  TextInput,
-  TouchableOpacity,
   ActivityIndicator,
   Dimensions,
   Platform,
-  Alert,
-  Image,
-  LayoutAnimation,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, router } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { useTheme } from '@/context/theme-context';
 import { useLanguage } from '@/context/language-context';
@@ -71,22 +64,9 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState<UserData | null>(null);
 
-  // Form states
-  const [cigarettesInput, setCigarettesInput] = useState('10');
-  const [yearsInput, setYearsInput] = useState('5');
-  const [priceInput, setPriceInput] = useState('30000');
-  const [quitTimeOffset, setQuitTimeOffset] = useState<'now' | '1h' | '3h' | '1d' | '3d'>('now');
-
   // Real-time counter states
   const [timeElapsed, setTimeElapsed] = useState({ d: 0, h: 0, m: 0, s: 0 });
   const [quoteIndex, setQuoteIndex] = useState(0);
-
-  // Harm-image slider state
-  const [harmSlideIndex, setHarmSlideIndex] = useState(0);
-  const [harmAutoPlay, setHarmAutoPlay] = useState(true);
-  const harmScrollRef = useRef<ScrollView>(null);
-  const harmResumeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const harmSlideWidth = width - 40; // khớp với paddingHorizontal: 20 của dashboardScroll
 
   const quotes = t('home.quotes') as unknown as string[];
 
@@ -110,6 +90,13 @@ export default function HomeScreen() {
       loadUserData();
     }, [])
   );
+
+  // Redirect to setup if no user data
+  useEffect(() => {
+    if (!isLoading && !userData) {
+      router.replace('/setup');
+    }
+  }, [isLoading, userData]);
 
   // Rotate quote every 15 seconds
   useEffect(() => {
@@ -162,48 +149,6 @@ export default function HomeScreen() {
     }
   };
 
-  const handleSaveSetup = async () => {
-    const cigs = parseInt(cigarettesInput, 10);
-    const years = parseInt(yearsInput, 10);
-    const price = parseInt(priceInput, 10);
-
-    if (isNaN(cigs) || cigs <= 0) {
-      Alert.alert('Lỗi', 'Vui lòng nhập số điếu thuốc hợp lệ.');
-      return;
-    }
-    if (isNaN(years) || years < 0) {
-      Alert.alert('Lỗi', 'Vui lòng nhập số năm hợp lệ.');
-      return;
-    }
-    if (isNaN(price) || price <= 0) {
-      Alert.alert('Lỗi', 'Vui lòng nhập giá tiền hợp lệ.');
-      return;
-    }
-
-    // Calculate quit date based on offset choice
-    const date = new Date();
-    if (quitTimeOffset === '1h') date.setHours(date.getHours() - 1);
-    else if (quitTimeOffset === '3h') date.setHours(date.getHours() - 3);
-    else if (quitTimeOffset === '1d') date.setDate(date.getDate() - 1);
-    else if (quitTimeOffset === '3d') date.setDate(date.getDate() - 3);
-
-    const newUserData: UserData = {
-      cigarettesPerDay: cigs,
-      yearsSmoked: years,
-      pricePerPack: price,
-      quitDate: date.toISOString(),
-    };
-
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newUserData));
-      setUserData(newUserData);
-    } catch (e) {
-      console.error('Failed to save user data', e);
-      Alert.alert('Lỗi', 'Không thể lưu dữ liệu thiết lập.');
-    } finally {
-    }
-  };
-
   // Single source of truth for the streak value, recalculated only when its inputs change.
   // While lastOpened hasn't finished loading yet, we hold off so we never flash a wrong value.
   const currentStreak = useMemo(() => {
@@ -213,124 +158,11 @@ export default function HomeScreen() {
 
   const isStreakActive = currentStreak >= STREAK_ACTIVE_THRESHOLD_DAYS;
 
-  if (isLoading) {
+  if (isLoading || !userData) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: themeColors.background }]}>
         <ActivityIndicator size="large" color={themeColors.tint} />
       </View>
-    );
-  }
-
-  // ONBOARDING SCREEN
-  if (!userData) {
-    return (
-      <ScrollView
-        contentContainerStyle={[styles.scrollContainer, { backgroundColor: themeColors.background }]}
-        keyboardShouldPersistTaps="handled"
-      >
-        <StatusBar style={activeScheme === 'dark' ? 'light' : 'dark'} />
-        <View style={styles.onboardingHeader}>
-          <Text style={[styles.appTitle, { color: themeColors.tint }]}>{t('home.brand')}</Text>
-          <Text style={[styles.appSub, { color: themeColors.muted }]}>
-            Bắt đầu hành trình sống khỏe, trong lành không khói thuốc
-          </Text>
-        </View>
-
-        <View style={[styles.setupCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-          <Text style={[styles.setupTitle, { color: themeColors.text }]}>{t('home.setupTitle')}</Text>
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: themeColors.text }]}>
-              {t('home.setupCigarettes')}
-            </Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={[styles.textInput, { color: themeColors.text, borderColor: themeColors.border, backgroundColor: themeColors.background }]}
-                keyboardType="numeric"
-                value={cigarettesInput}
-                onChangeText={setCigarettesInput}
-              />
-              <Text style={[styles.inputUnit, { color: themeColors.muted }]}>{t('home.cigarettes')}</Text>
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: themeColors.text }]}>
-              {t('home.setupYears')}
-            </Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={[styles.textInput, { color: themeColors.text, borderColor: themeColors.border, backgroundColor: themeColors.background }]}
-                keyboardType="numeric"
-                value={yearsInput}
-                onChangeText={setYearsInput}
-              />
-              <Text style={[styles.inputUnit, { color: themeColors.muted }]}>{t('home.days')}</Text>
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: themeColors.text }]}>
-              {t('home.setupPrice')}
-            </Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={[styles.textInput, { color: themeColors.text, borderColor: themeColors.border, backgroundColor: themeColors.background }]}
-                keyboardType="numeric"
-                value={priceInput}
-                onChangeText={setPriceInput}
-              />
-              <Text style={[styles.inputUnit, { color: themeColors.muted }]}>đ</Text>
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: themeColors.text }]}>
-              {t('home.setupQuitTime')}
-            </Text>
-            <View style={styles.offsetOptions}>
-              {[
-                { label: t('home.setupNow'), value: 'now' },
-                { label: t('home.setup1h'), value: '1h' },
-                { label: t('home.setup3h'), value: '3h' },
-                { label: t('home.setup1d'), value: '1d' },
-                { label: t('home.setup3d'), value: '3d' },
-              ].map((opt) => (
-                <TouchableOpacity
-                  key={opt.value}
-                  style={[
-                    styles.offsetBtn,
-                    {
-                      borderColor: themeColors.border,
-                      backgroundColor: quitTimeOffset === opt.value ? themeColors.tint : themeColors.background,
-                    },
-                  ]}
-                  onPress={() => setQuitTimeOffset(opt.value as any)}
-                >
-                  <Text
-                    style={[
-                      styles.offsetBtnText,
-                      {
-                        color: quitTimeOffset === opt.value ? '#FFF' : themeColors.text,
-                        fontWeight: quitTimeOffset === opt.value ? '700' : '400',
-                      },
-                    ]}
-                  >
-                    {opt.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: themeColors.tint }]}
-            onPress={handleSaveSetup}
-          >
-            <Text style={styles.primaryButtonText}>{t('home.setupStart')}</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
     );
   }
 
@@ -482,8 +314,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        
-
         {/* Motivational Quote Card */}
         <View style={[styles.quoteCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
           <IconSymbol
@@ -517,103 +347,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  scrollContainer: {
-    padding: 24,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingBottom: 30,
-    minHeight: '100%',
-  },
-  dashboardContainer: {
-    padding: 20,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingBottom: 30,
-  },
-  onboardingHeader: {
-    marginBottom: 28,
-    alignItems: 'center',
-  },
-  appTitle: {
-    fontSize: 32,
-    fontWeight: '900',
-    letterSpacing: 1,
-    marginBottom: 8,
-  },
-  appSub: {
-    fontSize: 15,
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 12,
-  },
-  setupCard: {
-    borderRadius: 24,
-    borderWidth: 1,
-    padding: 24,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 15,
-  },
-  setupTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  textInput: {
-    flex: 1,
-    height: 52,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  inputUnit: {
-    position: 'absolute',
-    right: 16,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  offsetOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 4,
-  },
-  offsetBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  offsetBtnText: {
-    fontSize: 13,
-  },
-  primaryButton: {
-    height: 54,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  primaryButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '700',
   },
   mainContainer: {
     flex: 1,

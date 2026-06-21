@@ -54,10 +54,7 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "c14debbb-dfbe-4325-89be-d47c72532a86"
-      }
+      "router": {}
     },
     "owner": "giakiet"
   }
