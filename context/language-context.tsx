@@ -8,7 +8,7 @@ import vi from '@/translations/vi.json';
 type Language = 'en' | 'vi';
 
 const translations = { en, vi };
-const STORAGE_KEY = '@BreatheFree:language';
+const STORAGE_KEY = '@SmokeGuardAI:language';
 
 interface LanguageContextType {
   language: Language;

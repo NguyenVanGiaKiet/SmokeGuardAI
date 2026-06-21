@@ -20,9 +20,9 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import * as Notifications from 'expo-notifications';
 import { useFonts, Kalam_700Bold } from '@expo-google-fonts/kalam';
 
-const STORAGE_KEY = '@BreatheFree:userData';
-const STORAGE_KEY_LOGS = '@BreatheFree:cravingLogs';
-const STORAGE_KEY_RUNS = '@BreatheFree:runLogs';
+const STORAGE_KEY = '@SmokeGuardAI:userData';
+const STORAGE_KEY_LOGS = '@SmokeGuardAI:cravingLogs';
+const STORAGE_KEY_RUNS = '@SmokeGuardAI:runLogs';
 
 interface UserData {
   cigarettesPerDay: number;
@@ -158,34 +158,6 @@ export default function ProfileScreen() {
     );
   };
 
-  const handleClearAllData = () => {
-    Alert.alert(
-      'Xóa toàn bộ dữ liệu',
-      'Hành động này sẽ xóa sạch thông tin cá nhân và lịch sử cơn thèm thuốc của bạn. Bạn có chắc chắn muốn thực hiện?',
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Xóa hết',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setIsLoading(true);
-              await AsyncStorage.removeItem(STORAGE_KEY);
-              await AsyncStorage.removeItem(STORAGE_KEY_LOGS);
-              await AsyncStorage.removeItem(STORAGE_KEY_RUNS);
-              setUserData(null);
-              setCravingsCount(0);
-              Alert.alert('Đã xóa', 'Toàn bộ dữ liệu đã được đặt lại.');
-            } catch (e) {
-              console.error(e);
-            } finally {
-              setIsLoading(false);
-            }
-          },
-        },
-      ]
-    );
-  };
 
   if (isLoading || !fontsLoaded) {
     return (
@@ -485,13 +457,6 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Clear Data Card */}
-        <TouchableOpacity
-          style={[styles.clearBtn, { borderColor: themeColors.border, marginBottom: 10 }]}
-          onPress={handleClearAllData}
-        >
-          <Text style={styles.clearBtnText}>{t('profile.clearData')}</Text>
-        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -673,19 +638,6 @@ const styles = StyleSheet.create({
   relapseBtnText: {
     color: '#FFF',
     fontSize: 14,
-    fontWeight: '700',
-  },
-  clearBtn: {
-    height: 50,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  clearBtnText: {
-    color: '#F43F5E',
-    fontSize: 13,
     fontWeight: '700',
   },
   noDataTitle: {

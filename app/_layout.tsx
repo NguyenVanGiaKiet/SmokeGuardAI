@@ -27,7 +27,7 @@ function RootLayoutContent() {
 
   useEffect(() => {
     async function checkSetup() {
-      const hasCompleted = await AsyncStorage.getItem('@BreatheFree:hasCompletedSetup');
+      const hasCompleted = await AsyncStorage.getItem('@SmokeGuardAI:hasCompletedSetup');
       setIsSetupDone(hasCompleted === 'true');
     }
     checkSetup();

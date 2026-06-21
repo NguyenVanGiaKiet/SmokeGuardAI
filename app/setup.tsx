@@ -7,7 +7,7 @@ import { Colors } from '@/constants/theme';
 import { useTheme } from '@/context/theme-context';
 import { useLanguage } from '@/context/language-context';
 
-const STORAGE_KEY = '@BreatheFree:userData';
+const STORAGE_KEY = '@SmokeGuardAI:userData';
 
 export default function SetupScreen() {
   const { activeScheme } = useTheme();
@@ -86,7 +86,7 @@ export default function SetupScreen() {
               value={yearsInput}
               onChangeText={setYearsInput}
             />
-            <Text style={[styles.inputUnit, { color: themeColors.muted }]}>{t('home.days')}</Text>
+            <Text style={[styles.inputUnit, { color: themeColors.muted }]}>{t('home.years')}</Text>
           </View>
         </View>
 

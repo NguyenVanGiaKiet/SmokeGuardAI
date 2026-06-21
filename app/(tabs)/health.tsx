@@ -109,7 +109,7 @@ function AnimatedDonut({
   );
 }
 
-const STORAGE_KEY = '@BreatheFree:userData';
+const STORAGE_KEY = '@SmokeGuardAI:userData';
 
 // ...
 

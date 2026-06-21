@@ -23,8 +23,8 @@ import { RunBreatheCarousel } from '@/components/tabs/RunBreatheCarousel';
 import { RunTracker } from '@/components/tabs/RunTracker';
 import { RunningHistory } from '@/components/tabs/RunningHistory';
 
-const STORAGE_KEY_LOGS = '@BreatheFree:cravingLogs';
-const STORAGE_KEY_RUNS = '@BreatheFree:runLogs';
+const STORAGE_KEY_LOGS = '@SmokeGuardAI:cravingLogs';
+const STORAGE_KEY_RUNS = '@SmokeGuardAI:runLogs';
 
 interface CravingLog {
   id: string;

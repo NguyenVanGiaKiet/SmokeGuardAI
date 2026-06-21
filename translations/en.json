@@ -31,8 +31,9 @@
   },
   "home": {
     "welcome": "Welcome back,",
-    "brand": "BreatheFree",
+    "brand": "SmokeGuardAI",
     "timerHeader": "SMOKE-FREE TIME",
+    "years": "years",
     "days": "days",
     "hours": "hours",
     "minutes": "minutes",
@@ -123,7 +124,7 @@
     }
   },
   "notifications": {
-    "dailyTitle": "BreatheFree Reminder",
+    "dailyTitle": "SmokeGuardAI Reminder",
     "dailyBody": "A new day, a fresh breath! Keep going, you're doing great!"
   },
   "discover": {

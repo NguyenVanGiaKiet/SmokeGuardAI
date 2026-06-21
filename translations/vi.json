@@ -31,8 +31,9 @@
   },
   "home": {
     "welcome": "Chào mừng quay lại,",
-    "brand": "BreatheFree",
+    "brand": "SmokeGuardAI",
     "timerHeader": "THỜI GIAN KHÔNG KHÓI THUỐC",
+    "years": "năm",
     "days": "ngày",
     "hours": "giờ",
     "minutes": "phút",
@@ -123,7 +124,7 @@
     }
   },
   "notifications": {
-    "dailyTitle": "Nhắc nhở từ BreatheFree",
+    "dailyTitle": "Nhắc nhở từ SmokeGuardAI",
     "dailyBody": "Một ngày mới, một hơi thở trong lành! Hãy tiếp tục cố gắng nhé!"
   },
   "discover": {

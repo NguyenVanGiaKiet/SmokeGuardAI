@@ -26,7 +26,7 @@ interface UserData {
   quitDate: string;
 }
 
-const STORAGE_KEY = '@BreatheFree:userData';
+const STORAGE_KEY = '@SmokeGuardAI:userData';
 
 // Streak is reset to 0 if the user hasn't opened the app for more than this long
 const STREAK_RESET_THRESHOLD_MS = 24 * 60 * 60 * 1000;
@@ -76,10 +76,10 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const getLastOpened = async () => {
-      const last = await AsyncStorage.getItem('@BreatheFree:lastOpened');
+      const last = await AsyncStorage.getItem('@SmokeGuardAI:lastOpened');
       setLastOpened(last);
       setIsLastOpenedLoaded(true);
-      await AsyncStorage.setItem('@BreatheFree:lastOpened', new Date().toISOString());
+      await AsyncStorage.setItem('@SmokeGuardAI:lastOpened', new Date().toISOString());
     };
     getLastOpened();
   }, []);

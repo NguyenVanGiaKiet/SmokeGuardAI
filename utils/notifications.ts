@@ -13,7 +13,7 @@ export async function scheduleDailyReminder() {
   // Lên lịch thông báo mới vào 8:00 sáng hàng ngày
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: "Nhắc nhở từ BreatheFree",
+      title: "Nhắc nhở từ SmokeGuardAI",
       body: "Một ngày mới, một hơi thở trong lành! Hãy tiếp tục cố gắng nhé!",
     },
     trigger: {

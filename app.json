@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Breathe Free - Stop Smoking",
-    "slug": "breathe-free-stop-smoking",
+    "name": "SmokeGuard AI - Stop Smoking",
+    "slug": "smokeguard-ai-stop-smoking",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/breathfree.png",
-    "scheme": "breathefree",
+    "scheme": "smokeguardai",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -23,7 +23,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.giakiet.breathefree",
+      "package": "com.giakiet.smokeguardai",
       "permissions": [
         "android.permission.ACTIVITY_RECOGNITION"
       ]

@@ -12,7 +12,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const STORAGE_KEY = '@BreatheFree:themeMode';
+const STORAGE_KEY = '@SmokeGuardAI:themeMode';
 
 export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemScheme = useSystemColorScheme();
