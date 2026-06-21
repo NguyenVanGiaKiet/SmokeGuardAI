@@ -35,16 +35,10 @@ const STREAK_RESET_THRESHOLD_MS = 24 * 60 * 60 * 1000;
 // Minimum streak (in days) required for the flame icon/text to show as "active" (colored)
 const STREAK_ACTIVE_THRESHOLD_DAYS = 3;
 
-// Calculate streak (in days quit), reset to 0 if the user was away for more than 24h
-const calculateStreak = (quitDate: string, lastOpened: string | null) => {
+// Calculate streak (in days quit) from the quit date
+const calculateStreak = (quitDate: string) => {
   const quitTime = new Date(quitDate);
-  const lastOpenTime = lastOpened ? new Date(lastOpened) : null;
   const now = new Date();
-
-  // If more than 24 hours have passed since the user last opened the app, streak is broken
-  if (lastOpenTime && now.getTime() - lastOpenTime.getTime() > STREAK_RESET_THRESHOLD_MS) {
-    return 0;
-  }
 
   // Zero out time-of-day so we count full calendar days
   const quitMidnight = new Date(quitTime);
@@ -52,10 +46,10 @@ const calculateStreak = (quitDate: string, lastOpened: string | null) => {
   const nowMidnight = new Date(now);
   nowMidnight.setHours(0, 0, 0, 0);
 
-  const diffTime = Math.abs(nowMidnight.getTime() - quitMidnight.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffTime = nowMidnight.getTime() - quitMidnight.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-  return diffDays;
+  return Math.max(0, diffDays);
 };
 
 export default function HomeScreen() {
@@ -164,8 +158,8 @@ export default function HomeScreen() {
   // While lastOpened hasn't finished loading yet, we hold off so we never flash a wrong value.
   const currentStreak = useMemo(() => {
     if (!userData || !isLastOpenedLoaded) return 0;
-    return calculateStreak(userData.quitDate, lastOpened);
-  }, [userData, lastOpened, isLastOpenedLoaded]);
+    return calculateStreak(userData.quitDate);
+  }, [userData, isLastOpenedLoaded]);
 
   const isStreakActive = currentStreak >= STREAK_ACTIVE_THRESHOLD_DAYS;
 
@@ -249,13 +243,43 @@ export default function HomeScreen() {
         </View>
 
         {/* Risk Assessment Card */}
-        {riskAssessment && (
-          <View style={[styles.riskCard, { backgroundColor: themeColors.card, borderColor: riskAssessment.level === 'High' ? themeColors.danger : themeColors.border }]}>
-            <Text style={[styles.cardTitle, { color: themeColors.text }]}>Nguy cơ hút thuốc</Text>
-            <Text style={{ color: themeColors.text }}>Mức độ: {riskAssessment.level}</Text>
-            <Text style={{ color: themeColors.muted }}>{riskAssessment.message}</Text>
-          </View>
-        )}
+        {riskAssessment && (() => {
+          const riskColor =
+            riskAssessment.level === 'High'
+              ? themeColors.danger
+              : riskAssessment.level === 'Medium'
+              ? themeColors.warning
+              : themeColors.primary;
+
+          const levelKey = 
+            riskAssessment.level === 'High' ? 'riskHigh' : 
+            riskAssessment.level === 'Medium' ? 'riskMedium' : 'riskLow';
+            
+          const msgKey =
+            riskAssessment.level === 'High' ? 'riskHighMsg' : 
+            riskAssessment.level === 'Medium' ? 'riskMediumMsg' : 'riskLowMsg';
+
+          return (
+            <View
+              style={[
+                styles.riskCard,
+                {
+                  backgroundColor: themeColors.card,
+                  borderColor: riskColor,
+                },
+              ]}
+            >
+              <Text style={[styles.cardTitle, { color: themeColors.text }]}>{t('home.riskTitle')}</Text>
+              <Text style={{ color: themeColors.text }}>
+                {t('home.riskLevel')}{' '}
+                <Text style={{ color: riskColor, fontWeight: 'bold' }}>
+                  {t(`home.${levelKey}`)}
+                </Text>
+              </Text>
+              <Text style={{ color: themeColors.muted }}>{t(`home.${msgKey}`)}</Text>
+            </View>
+          );
+        })()}
 
         {/* Counter Card */}
         <View style={[styles.counterCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>

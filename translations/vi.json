@@ -31,7 +31,7 @@
   },
   "home": {
     "welcome": "Chào mừng quay lại,",
-    "brand": "SmokeGuardAI",
+    "brand": "SmokeGuard AI",
     "timerHeader": "THỜI GIAN KHÔNG KHÓI THUỐC",
     "years": "năm",
     "days": "ngày",
@@ -45,6 +45,14 @@
     "lifeRegained": "Tuổi thọ được phục hồi",
     "lifeRegainedDesc": "Tuổi thọ được phục hồi (11 phút/điếu thuốc không hút)",
     "streakTitle": "Chuỗi ngày",
+    "riskTitle": "Nguy cơ hút thuốc",
+    "riskLevel": "Mức độ:",
+    "riskLow": "Thấp",
+    "riskMedium": "Trung bình",
+    "riskHigh": "Cao",
+    "riskLowMsg": "Bạn đang làm rất tốt!",
+    "riskMediumMsg": "Cẩn thận, hãy giữ vững quyết tâm.",
+    "riskHighMsg": "Nguy cơ cao! Hãy hít thở sâu ngay lúc này.",
     "tipsTitle": "Lời khuyên khi thèm thuốc",
     "tipsBody": "Cơn thèm thuốc lá thường đạt cực điểm sau 3-5 phút và sẽ biến mất. Khi thèm, hãy chuyển sang tab Cơn thèm để thực hành bài tập thở sâu 4-7-8 giúp xoa dịu thần kinh tức thì.",
     "setupTitle": "Thiết Lập Hành Trình",
@@ -132,6 +140,18 @@
     "whyQuitTitle": "Tại sao bạn nên từ bỏ?",
     "whyQuitBody1": "Hút thuốc lá gây ra hàng loạt các bệnh nguy hiểm: ung thư phổi, bệnh tim mạch, đột quỵ và các bệnh hô hấp mãn tính. Mỗi điếu thuốc bạn hút vào là một bước tiến gần hơn đến những nguy cơ này.",
     "whyQuitBody2": "Tuy nhiên, cơ thể bạn có khả năng phục hồi đáng kinh ngạc ngay khi bạn ngừng hút. Hành trình của bạn bắt đầu từ hôm nay!"
+  },
+  "coach": {
+    "title": "AI Coach",
+    "typing": "Đang soạn tin...",
+    "ready": "Luôn sẵn sàng đồng hành",
+    "emptyTitle": "Bắt đầu trò chuyện",
+    "emptyDesc": "Chia sẻ cảm giác của bạn hôm nay, Coach luôn ở đây để lắng nghe.",
+    "typingIndicator": "Coach đang soạn...",
+    "inputPlaceholder": "Nhắn nhủ với AI Coach...",
+    "sidebarTitle": "Lịch sử trò chuyện",
+    "newChat": "Trò chuyện mới",
+    "noChats": "Chưa có cuộc trò chuyện nào"
   },
   "health": {
     "title": "Sức Khỏe Phục Hồi",

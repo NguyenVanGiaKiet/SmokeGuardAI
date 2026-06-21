@@ -1,6 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const COACH_STORAGE_KEY = '@SmokeGuardAI:coachHistory';
+const COACH_THREADS_KEY = '@SmokeGuardAI:coachThreads';
+const COACH_MESSAGES_PREFIX = '@SmokeGuardAI:coachMessages:';
+
 // Note: In a production app, the API key should be managed securely (e.g., via environment variables or a secure backend proxy)
 // For this prototype, we'll assume it's passed or available.
 const GROQ_API_KEY = process.env.EXPO_PUBLIC_GROQ_API_KEY; 
@@ -13,15 +16,162 @@ export interface ChatMessage {
   timestamp: string;
 }
 
-export const getChatHistory = async (): Promise<ChatMessage[]> => {
-  const data = await AsyncStorage.getItem(COACH_STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
+export interface ChatThread {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Migrate old single-chat data to multi-chat data
+const migrateIfNeeded = async (): Promise<ChatThread[]> => {
+  try {
+    const legacyHistoryStr = await AsyncStorage.getItem(COACH_STORAGE_KEY);
+    if (!legacyHistoryStr) return [];
+
+    const legacyHistory: ChatMessage[] = JSON.parse(legacyHistoryStr);
+    if (legacyHistory.length === 0) return [];
+
+    // Create a legacy thread
+    const legacyThreadId = 'legacy_default';
+    const firstMsg = legacyHistory[0];
+    const lastMsg = legacyHistory[legacyHistory.length - 1];
+    
+    let title = 'Cuộc trò chuyện cũ';
+    if (firstMsg && firstMsg.text) {
+      title = firstMsg.text.substring(0, 30) + (firstMsg.text.length > 30 ? '...' : '');
+    }
+
+    const legacyThread: ChatThread = {
+      id: legacyThreadId,
+      title,
+      createdAt: firstMsg ? firstMsg.timestamp : new Date().toISOString(),
+      updatedAt: lastMsg ? lastMsg.timestamp : new Date().toISOString(),
+    };
+
+    // Save legacy thread and its messages
+    await AsyncStorage.setItem(COACH_THREADS_KEY, JSON.stringify([legacyThread]));
+    await AsyncStorage.setItem(`${COACH_MESSAGES_PREFIX}${legacyThreadId}`, legacyHistoryStr);
+    
+    // Clear legacy single key to prevent migrating again
+    await AsyncStorage.removeItem(COACH_STORAGE_KEY);
+
+    return [legacyThread];
+  } catch (error) {
+    console.error('Migration error:', error);
+    return [];
+  }
 };
 
-export const saveMessage = async (message: ChatMessage) => {
-  const history = await getChatHistory();
-  history.push(message);
-  await AsyncStorage.setItem(COACH_STORAGE_KEY, JSON.stringify(history));
+export const getThreads = async (): Promise<ChatThread[]> => {
+  try {
+    const threadsStr = await AsyncStorage.getItem(COACH_THREADS_KEY);
+    if (!threadsStr) {
+      // Check legacy migration
+      return await migrateIfNeeded();
+    }
+    return JSON.parse(threadsStr);
+  } catch (error) {
+    console.error('Error getting threads:', error);
+    return [];
+  }
+};
+
+export const createThread = async (title?: string): Promise<ChatThread> => {
+  try {
+    const threads = await getThreads();
+    const newThread: ChatThread = {
+      id: Date.now().toString(),
+      title: title || 'Cuộc trò chuyện mới',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    const updatedThreads = [newThread, ...threads];
+    await AsyncStorage.setItem(COACH_THREADS_KEY, JSON.stringify(updatedThreads));
+    return newThread;
+  } catch (error) {
+    console.error('Error creating thread:', error);
+    throw error;
+  }
+};
+
+export const deleteThread = async (threadId: string): Promise<void> => {
+  try {
+    const threads = await getThreads();
+    const updatedThreads = threads.filter(t => t.id !== threadId);
+    await AsyncStorage.setItem(COACH_THREADS_KEY, JSON.stringify(updatedThreads));
+    await AsyncStorage.removeItem(`${COACH_MESSAGES_PREFIX}${threadId}`);
+  } catch (error) {
+    console.error('Error deleting thread:', error);
+  }
+};
+
+export const getChatHistory = async (threadId?: string): Promise<ChatMessage[]> => {
+  try {
+    let activeId = threadId;
+    if (!activeId) {
+      const threads = await getThreads();
+      if (threads.length === 0) {
+        return [];
+      }
+      activeId = threads[0].id;
+    }
+
+    const data = await AsyncStorage.getItem(`${COACH_MESSAGES_PREFIX}${activeId}`);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting chat history:', error);
+    return [];
+  }
+};
+
+export const saveMessage = async (message: ChatMessage, threadId?: string) => {
+  try {
+    let targetThreadId = threadId;
+    
+    // Fallback if no threadId provided
+    if (!targetThreadId) {
+      const threads = await getThreads();
+      if (threads.length === 0) {
+        const newT = await createThread();
+        targetThreadId = newT.id;
+      } else {
+        targetThreadId = threads[0].id;
+      }
+    }
+
+    // 1. Save message to thread-specific store
+    const history = await getChatHistory(targetThreadId);
+    history.push(message);
+    await AsyncStorage.setItem(`${COACH_MESSAGES_PREFIX}${targetThreadId}`, JSON.stringify(history));
+
+    // 2. Update thread's metadata
+    const threads = await getThreads();
+    const threadIndex = threads.findIndex(t => t.id === targetThreadId);
+    if (threadIndex > -1) {
+      threads[threadIndex].updatedAt = new Date().toISOString();
+      
+      // If the title is 'Cuộc trò chuyện mới' and user sent the message, let's update the title
+      if (
+        (threads[threadIndex].title === 'Cuộc trò chuyện mới' || threads[threadIndex].title === '') &&
+        message.role === 'user'
+      ) {
+        threads[threadIndex].title = message.text.substring(0, 30) + (message.text.length > 30 ? '...' : '');
+      }
+
+      // Reorder threads to bring updated thread to top
+      const updatedThread = threads[threadIndex];
+      const reorderedThreads = [
+        updatedThread,
+        ...threads.filter(t => t.id !== targetThreadId)
+      ];
+      
+      await AsyncStorage.setItem(COACH_THREADS_KEY, JSON.stringify(reorderedThreads));
+    }
+  } catch (error) {
+    console.error('Error saving message:', error);
+  }
 };
 
 export const sendMessageToCoach = async (userMessage: string, context: string): Promise<string> => {

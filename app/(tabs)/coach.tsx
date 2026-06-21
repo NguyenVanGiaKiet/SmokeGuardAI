@@ -13,23 +13,29 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Colors } from '@/constants/theme';
 import { useTheme } from '@/context/theme-context';
+import { useLanguage } from '@/context/language-context';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { ChatHeader } from '@/components/chat/ChatHeader';
+import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import {
+  getThreads,
+  createThread,
+  deleteThread,
   getChatHistory,
   saveMessage,
   sendMessageToCoach,
   ChatMessage,
+  ChatThread,
 } from '@/utils/ai-coach-service';
-
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const NEAR_BOTTOM_THRESHOLD = 80;
 
 // Bong bóng tin nhắn có hiệu ứng nảy nhẹ khi vừa xuất hiện
-function MessageBubble({
+const MessageBubble = React.memo(function MessageBubble({
   item,
   themeColors,
   isNew,
@@ -106,16 +112,23 @@ function MessageBubble({
       </Text>
     </Animated.View>
   );
-}
+});
 
 export default function CoachScreen() {
   const { activeScheme } = useTheme();
+  const { t } = useLanguage();
   const themeColors = Colors[activeScheme];
   const flatListRef = useRef<FlatList>(null);
 
+  const [threads, setThreads] = useState<ChatThread[]>([]);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+
+  // Trạng thái sidebar
+  const [shouldRenderSidebar, setShouldRenderSidebar] = useState(false);
+  const drawerAnim = useRef(new Animated.Value(0)).current;
 
   // Theo dõi id tin nhắn nào là "mới" để áp hiệu ứng nảy
   const lastMessageIdRef = useRef<string | null>(null);
@@ -126,24 +139,40 @@ export default function CoachScreen() {
   const fabAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    loadHistory();
+    loadThreadsAndHistory();
   }, []);
 
-  const loadHistory = async () => {
-    const history = await getChatHistory();
-    setMessages(history);
-    if (history.length > 0) {
-      lastMessageIdRef.current = history[history.length - 1].id;
+  const loadThreadsAndHistory = async () => {
+    try {
+      const list = await getThreads();
+      setThreads(list);
+      
+      let activeId = activeThreadId;
+      if (list.length > 0) {
+        activeId = list[0].id;
+        setActiveThreadId(activeId);
+      } else {
+        const newT = await createThread();
+        activeId = newT.id;
+        setActiveThreadId(activeId);
+        setThreads([newT]);
+      }
+      
+      const history = await getChatHistory(activeId);
+      setMessages(history);
+      if (history.length > 0) {
+        lastMessageIdRef.current = history[history.length - 1].id;
+      }
+      
+      requestAnimationFrame(() => {
+        flatListRef.current?.scrollToEnd({ animated: false });
+      });
+    } catch (e) {
+      console.error('Error loading threads/history:', e);
     }
-    // Vào màn hình là cuộn thẳng xuống cuối lịch sử chat
-    requestAnimationFrame(() => {
-      flatListRef.current?.scrollToEnd({ animated: false });
-    });
   };
 
   // CHỈ tự cuộn xuống cuối khi có một tin nhắn MỚI được thêm vào
-  // (người dùng gửi, hoặc Coach trả lời) — không can thiệp vào bất kỳ
-  // lúc nào khác, để không phá thao tác cuộn tay của người dùng
   useEffect(() => {
     if (messages.length === 0) return;
     const last = messages[messages.length - 1];
@@ -152,7 +181,6 @@ export default function CoachScreen() {
     newMessageIdsRef.current.add(last.id);
     lastMessageIdRef.current = last.id;
 
-    // Một lần gọi ngay, một lần gọi sau khi animation/layout ổn định
     flatListRef.current?.scrollToEnd({ animated: true });
     const timer = setTimeout(() => {
       flatListRef.current?.scrollToEnd({ animated: true });
@@ -185,7 +213,7 @@ export default function CoachScreen() {
   };
 
   const handleSend = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || !activeThreadId) return;
 
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
@@ -195,9 +223,13 @@ export default function CoachScreen() {
     };
 
     setMessages((prev) => [...prev, userMsg]);
-    await saveMessage(userMsg);
+    await saveMessage(userMsg, activeThreadId);
     setInputText('');
     setIsTyping(true);
+
+    // Cập nhật danh sách cuộc hội thoại để cập nhật tiêu đề mới và vị trí đầu tiên
+    const updatedThreads = await getThreads();
+    setThreads(updatedThreads);
 
     const responseText = await sendMessageToCoach(
       userMsg.text,
@@ -212,14 +244,100 @@ export default function CoachScreen() {
     };
 
     setMessages((prev) => [...prev, coachMsg]);
-    await saveMessage(coachMsg);
+    await saveMessage(coachMsg, activeThreadId);
     setIsTyping(false);
+
+    // Cập nhật lại list threads lần nữa để đảm bảo đồng bộ
+    const finalThreads = await getThreads();
+    setThreads(finalThreads);
+  };
+
+  const handleNewChat = async () => {
+    try {
+      const newT = await createThread();
+      const updatedThreads = await getThreads();
+      setThreads(updatedThreads);
+      setActiveThreadId(newT.id);
+      setMessages([]);
+      closeSidebar();
+    } catch (e) {
+      console.error('Failed to create new chat:', e);
+    }
+  };
+
+  const switchThread = async (threadId: string) => {
+    try {
+      setActiveThreadId(threadId);
+      closeSidebar();
+      const history = await getChatHistory(threadId);
+      setMessages(history);
+      
+      requestAnimationFrame(() => {
+        flatListRef.current?.scrollToEnd({ animated: false });
+      });
+    } catch (e) {
+      console.error('Error switching thread:', e);
+    }
+  };
+
+  const handleDeleteThread = async (threadId: string) => {
+    try {
+      await deleteThread(threadId);
+      const list = await getThreads();
+      setThreads(list);
+
+      if (activeThreadId === threadId) {
+        if (list.length > 0) {
+          const firstThread = list[0];
+          setActiveThreadId(firstThread.id);
+          const history = await getChatHistory(firstThread.id);
+          setMessages(history);
+        } else {
+          const newT = await createThread();
+          setThreads([newT]);
+          setActiveThreadId(newT.id);
+          setMessages([]);
+        }
+      }
+    } catch (e) {
+      console.error('Error deleting thread:', e);
+    }
+  };
+
+  const openSidebar = () => {
+    setShouldRenderSidebar(true);
+    Animated.timing(drawerAnim, {
+      toValue: 1,
+      duration: 250,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeSidebar = () => {
+    Animated.timing(drawerAnim, {
+      toValue: 0,
+      duration: 220,
+      useNativeDriver: true,
+    }).start(() => {
+      setShouldRenderSidebar(false);
+    });
   };
 
   const formatTime = (iso: string) => {
     const d = new Date(iso);
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
+
+  // Interpolations cho hiệu ứng slide sidebar
+  const translateX = drawerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [280, 0],
+  });
+
+  const backdropOpacity = drawerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 0.4],
+  });
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
@@ -230,18 +348,12 @@ export default function CoachScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        {/* Header */}
-        <View style={[styles.header, { borderBottomColor: themeColors.border }]}>
-          <View style={[styles.avatar, { backgroundColor: themeColors.tint + '1A' }]}>
-            <IconSymbol size={18} name="sparkles" color={themeColors.tint} />
-          </View>
-          <View>
-            <Text style={[styles.headerTitle, { color: themeColors.text }]}>Coach</Text>
-            <Text style={[styles.headerSubtitle, { color: themeColors.muted }]}>
-              {isTyping ? 'Đang soạn tin nhắn…' : 'Luôn sẵn sàng đồng hành'}
-            </Text>
-          </View>
-        </View>
+        <ChatHeader
+          title={t('coach.title')}
+          subtitle={isTyping ? t('coach.typing') : t('coach.ready')}
+          onNewChat={handleNewChat}
+          onOpenSidebar={openSidebar}
+        />
 
         <View style={styles.flexFill}>
           <FlatList
@@ -258,10 +370,10 @@ export default function CoachScreen() {
                   <IconSymbol size={28} name="sparkles" color={themeColors.tint} />
                 </View>
                 <Text style={[styles.emptyTitle, { color: themeColors.text }]}>
-                  Bắt đầu trò chuyện
+                  {t('coach.emptyTitle')}
                 </Text>
                 <Text style={[styles.emptyText, { color: themeColors.muted }]}>
-                  Chia sẻ cảm giác của bạn hôm nay, Coach luôn ở đây để lắng nghe.
+                  {t('coach.emptyDesc')}
                 </Text>
               </View>
             }
@@ -317,7 +429,7 @@ export default function CoachScreen() {
             <View style={[styles.typingBubble, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
               <ActivityIndicator size="small" color={themeColors.tint} />
               <Text style={{ color: themeColors.muted, marginLeft: 8, fontSize: 13 }}>
-                Coach đang soạn...
+                {t('coach.typingIndicator')}
               </Text>
             </View>
           </View>
@@ -339,13 +451,11 @@ export default function CoachScreen() {
               style={[styles.input, { color: themeColors.text }]}
               value={inputText}
               onChangeText={setInputText}
-              placeholder="Nhắn nhủ với Coach..."
+              placeholder={t('coach.inputPlaceholder')}
               placeholderTextColor={themeColors.muted}
               multiline
               scrollEnabled
               onFocus={() => {
-                // Đợi bàn phím trồi lên xong rồi mới cuộn, để tính đúng
-                // chiều cao khả dụng còn lại của danh sách
                 flatListRef.current?.scrollToEnd({ animated: true });
                 setTimeout(() => {
                   flatListRef.current?.scrollToEnd({ animated: true });
@@ -365,6 +475,17 @@ export default function CoachScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      <ChatSidebar
+        visible={shouldRenderSidebar}
+        onClose={closeSidebar}
+        threads={threads}
+        activeThreadId={activeThreadId}
+        onNewChat={handleNewChat}
+        onSwitchThread={switchThread}
+        onDeleteThread={handleDeleteThread}
+        drawerAnim={drawerAnim}
+      />
     </SafeAreaView>
   );
 }
@@ -372,24 +493,6 @@ export default function CoachScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   flexFill: { flex: 1 },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 12,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: { fontSize: 16, fontWeight: '600' },
-  headerSubtitle: { fontSize: 12, marginTop: 2 },
 
   chatList: { padding: 20, paddingBottom: 8, gap: 18, flexGrow: 1 },
 
@@ -440,7 +543,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 10,
-    paddingBottom: 14,
+    paddingBottom: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
     gap: 10,
   },

@@ -28,6 +28,11 @@ const MAPPING = {
   'arrow.up': 'arrow-upward',
   'sparkles': 'auto-awesome',
   'arrow.down': 'arrow-downward',
+  'line.3.horizontal': 'menu',
+  'plus': 'add',
+  'trash': 'delete',
+  'clock': 'history',
+  'square.and.pencil': 'edit',
   } as const;
 
 type IconSymbolName = keyof typeof MAPPING;

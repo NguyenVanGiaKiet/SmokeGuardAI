@@ -31,7 +31,7 @@
   },
   "home": {
     "welcome": "Welcome back,",
-    "brand": "SmokeGuardAI",
+    "brand": "SmokeGuard AI",
     "timerHeader": "SMOKE-FREE TIME",
     "years": "years",
     "days": "days",
@@ -45,6 +45,14 @@
     "lifeRegained": "Life regained",
     "lifeRegainedDesc": "Life regained (11 mins/cigarette not smoked)",
     "streakTitle": "Streaks",
+    "riskTitle": "Smoking Risk",
+    "riskLevel": "Level:",
+    "riskLow": "Low",
+    "riskMedium": "Medium",
+    "riskHigh": "High",
+    "riskLowMsg": "You're doing great!",
+    "riskMediumMsg": "Be careful, stay determined.",
+    "riskHighMsg": "High risk! Take a deep breath right now.",
     "tipsTitle": "Tips for cravings",
     "tipsBody": "Cravings usually peak after 3-5 minutes and will disappear. When craving, switch to the Cravings tab to practice 4-7-8 deep breathing to soothe your nerves instantly.",
     "setupTitle": "Journey Setup",
@@ -132,6 +140,18 @@
     "whyQuitTitle": "Why should you quit?",
     "whyQuitBody1": "Smoking causes a series of dangerous diseases: lung cancer, cardiovascular disease, stroke, and chronic respiratory diseases. Each cigarette you smoke is a step closer to these risks.",
     "whyQuitBody2": "However, your body has an amazing ability to recover as soon as you stop smoking. Your journey starts today!"
+  },
+  "coach": {
+    "title": "AI Coach",
+    "typing": "Typing...",
+    "ready": "Always ready to accompany you",
+    "emptyTitle": "Start a conversation",
+    "emptyDesc": "Share your feelings today, Coach is here to listen.",
+    "typingIndicator": "Coach is typing...",
+    "inputPlaceholder": "Message AI Coach...",
+    "sidebarTitle": "Chat History",
+    "newChat": "New Chat",
+    "noChats": "No conversations yet"
   },
   "health": {
     "title": "Health Recovery",
