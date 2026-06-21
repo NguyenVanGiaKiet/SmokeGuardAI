@@ -110,7 +110,7 @@ export default function CravingsScreen() {
   const saveRunSession = async (steps: number, distance: string) => {
     const newRun = {
       id: Date.now().toString(),
-      date: new Date().toLocaleDateString('vi-VN'),
+      date: new Date().toISOString(),
       steps,
       distance,
     };
@@ -118,8 +118,10 @@ export default function CravingsScreen() {
     try {
       await AsyncStorage.setItem(STORAGE_KEY_RUNS, JSON.stringify(updatedHistory));
       setRunHistory(updatedHistory);
+      Alert.alert('Thành công', 'Đã lưu lịch sử chạy bộ.');
     } catch (e) {
       console.error(e);
+      Alert.alert('Lỗi', 'Không thể lưu lịch sử chạy.');
     }
   };
 

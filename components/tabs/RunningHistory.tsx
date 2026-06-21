@@ -35,7 +35,9 @@ export const RunningHistory = ({
   const renderItem = ({ item }: { item: RunLog }) => (
     <View style={[styles.historyItem, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
       <View style={styles.historyInfo}>
-        <Text style={[styles.dateText, { color: themeColors.muted }]}>{item.date}</Text>
+        <Text style={[styles.dateText, { color: themeColors.muted }]}>
+            {new Date(item.date).toLocaleDateString()}
+        </Text>
         <Text style={[styles.statText, { color: themeColors.text }]}>{item.steps} {t('cravings.running.historySteps')}</Text>
         <Text style={[styles.statText, { color: themeColors.text }]}>{item.distance} {t('cravings.running.km')}</Text>
       </View>
