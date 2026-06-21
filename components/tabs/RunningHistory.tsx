@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useLanguage } from '@/context/language-context';
 
 interface RunLog {
   id: string;
@@ -18,13 +19,15 @@ export const RunningHistory = ({
   history: RunLog[];
   onDelete: (id: string) => void;
 }) => {
+  const { t } = useLanguage();
+
   const confirmDelete = (id: string) => {
     Alert.alert(
-      'Xóa lịch sử',
-      'Bạn có chắc muốn xóa mục này khỏi lịch sử chạy?',
+      t('cravings.running.deleteHistory'),
+      t('cravings.running.confirmDelete'),
       [
-        { text: 'Hủy', style: 'cancel' },
-        { text: 'Xóa', style: 'destructive', onPress: () => onDelete(id) },
+        { text: t('cravings.running.cancel'), style: 'cancel' },
+        { text: t('cravings.running.delete'), style: 'destructive', onPress: () => onDelete(id) },
       ]
     );
   };
@@ -33,8 +36,8 @@ export const RunningHistory = ({
     <View style={[styles.historyItem, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
       <View style={styles.historyInfo}>
         <Text style={[styles.dateText, { color: themeColors.muted }]}>{item.date}</Text>
-        <Text style={[styles.statText, { color: themeColors.text }]}>{item.steps} bước</Text>
-        <Text style={[styles.statText, { color: themeColors.text }]}>{item.distance} km</Text>
+        <Text style={[styles.statText, { color: themeColors.text }]}>{item.steps} {t('cravings.running.historySteps')}</Text>
+        <Text style={[styles.statText, { color: themeColors.text }]}>{item.distance} {t('cravings.running.km')}</Text>
       </View>
       <TouchableOpacity onPress={() => confirmDelete(item.id)} style={styles.deleteBtn} hitSlop={8}>
         <IconSymbol size={18} name="chevron.right" color={themeColors.danger} />
@@ -44,9 +47,9 @@ export const RunningHistory = ({
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: themeColors.text }]}>Lịch sử chạy</Text>
+      <Text style={[styles.title, { color: themeColors.text }]}>{t('cravings.running.history')}</Text>
       {history.length === 0 ? (
-        <Text style={{color: themeColors.muted}}>Chưa có lịch sử chạy nào.</Text>
+        <Text style={{color: themeColors.muted}}>{t('cravings.running.noHistory')}</Text>
       ) : (
         <FlatList
           data={history}
@@ -59,6 +62,7 @@ export const RunningHistory = ({
     </View>
   );
 };
+
 
 
 const styles = StyleSheet.create({

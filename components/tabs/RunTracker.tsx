@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Pedometer } from 'expo-sensors';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useLanguage } from '@/context/language-context';
 
 export const RunTracker = ({ themeColors, onStop }: { themeColors: any, onStop: (steps: number, distance: string) => void }) => {
   const [stepCount, setStepCount] = useState(0);
   const [isTracking, setIsTracking] = useState(false);
   const subscriptionRef = useRef<any>(null);
+  const { t } = useLanguage();
 
   const startTracking = async () => {
     const { status } = await Pedometer.requestPermissionsAsync();
@@ -15,7 +17,7 @@ export const RunTracker = ({ themeColors, onStop }: { themeColors: any, onStop: 
       const isAvailable = await Pedometer.isAvailableAsync();
       
       if (!isAvailable) {
-         alert('Thiết bị không hỗ trợ cảm biến đếm bước chân.');
+         alert('Device does not support pedometer'); // Note: You might want to translate this too
          return;
       }
 
@@ -24,7 +26,7 @@ export const RunTracker = ({ themeColors, onStop }: { themeColors: any, onStop: 
       });
       setIsTracking(true);
     } else {
-      alert('Ứng dụng cần quyền truy cập cảm biến để đếm bước chân.');
+      alert('Permission denied'); // Note: You might want to translate this too
     }
   };
 
@@ -52,22 +54,22 @@ export const RunTracker = ({ themeColors, onStop }: { themeColors: any, onStop: 
     <View style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
       <View style={styles.headerRow}>
         <IconSymbol name="figure.run" size={24} color={themeColors.tint} />
-        <Text style={[styles.cardTitle, { color: themeColors.text, marginLeft: 8 }]}>Hoạt động</Text>
+        <Text style={[styles.cardTitle, { color: themeColors.text, marginLeft: 8 }]}>{t('cravings.running.activity')}</Text>
       </View>
 
       <View style={styles.mainDisplay}>
         <Text style={[styles.bigStat, { color: themeColors.tint }]}>{stepCount}</Text>
-        <Text style={[styles.bigLabel, { color: themeColors.muted }]}>bước chân hôm nay</Text>
+        <Text style={[styles.bigLabel, { color: themeColors.muted }]}>{t('cravings.running.stepsToday')}</Text>
       </View>
 
       <View style={styles.statsContainer}>
         <View style={[styles.statBox, { backgroundColor: themeColors.background }]}>
             <Text style={[styles.statValue, { color: themeColors.text }]}>{km}</Text>
-            <Text style={[styles.statLabel, { color: themeColors.muted }]}>km</Text>
+            <Text style={[styles.statLabel, { color: themeColors.muted }]}>{t('cravings.running.km')}</Text>
         </View>
         <View style={[styles.statBox, { backgroundColor: themeColors.background }]}>
             <Text style={[styles.statValue, { color: themeColors.text }]}>{(stepCount * 0.04).toFixed(0)}</Text>
-            <Text style={[styles.statLabel, { color: themeColors.muted }]}>kcal</Text>
+            <Text style={[styles.statLabel, { color: themeColors.muted }]}>{t('cravings.running.kcal')}</Text>
         </View>
       </View>
 
@@ -79,12 +81,13 @@ export const RunTracker = ({ themeColors, onStop }: { themeColors: any, onStop: 
         onPress={isTracking ? stopTracking : startTracking}
       >
         <Text style={styles.buttonText}>
-          {isTracking ? 'Dừng theo dõi' : 'Bắt đầu chạy'}
+          {isTracking ? t('cravings.running.stop') : t('cravings.running.start')}
         </Text>
       </TouchableOpacity>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   card: {

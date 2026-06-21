@@ -128,98 +128,80 @@ interface Milestone {
   description: string;
 }
 
-const HEALTH_MILESTONES: Milestone[] = [
-  {
-    id: '1',
-    title: 'Huyết áp & Nhịp tim',
-    durationMs: 20 * 60 * 1000,
-    durationText: '20 phút',
-    description: 'Huyết áp và nhịp tim của bạn bắt đầu giảm trở lại mức bình thường. Các chi bắt đầu ấm lên.',
-  },
-  {
-    id: '2',
-    title: 'Khí Carbon Monoxide',
-    durationMs: 8 * 60 * 60 * 1000,
-    durationText: '8 giờ',
-    description: 'Nồng độ khí CO độc hại trong máu giảm một nửa. Nồng độ oxy trong máu phục hồi về mức bình thường.',
-  },
-  {
-    id: '3',
-    title: 'Thải lọc CO hoàn toàn',
-    durationMs: 24 * 60 * 60 * 1000,
-    durationText: '1 ngày',
-    description: 'Carbon monoxide được đào thải hoàn toàn khỏi cơ thể. Phổi bắt đầu quá trình tự làm sạch chất độc và đờm bám.',
-  },
-  {
-    id: '4',
-    title: 'Đào thải hoàn toàn Nicotine',
-    durationMs: 48 * 60 * 60 * 1000,
-    durationText: '2 ngày',
-    description: 'Toàn bộ chất nicotine đã được lọc bỏ. Vị giác và khứu giác của bạn bắt đầu nhạy bén và ăn uống ngon miệng hơn.',
-  },
-  {
-    id: '5',
-    title: 'Hít thở Dễ dàng',
-    durationMs: 72 * 60 * 60 * 1000,
-    durationText: '3 ngày',
-    description: 'Các ống phế quản trong phổi bắt đầu giãn ra và thư thái. Dung tích phổi tăng lên, giúp thở sâu nhẹ nhàng.',
-  },
-  {
-    id: '6',
-    title: 'Tuần hoàn Máu & Thể lực',
-    durationMs: 2 * 7 * 24 * 60 * 60 * 1000,
-    durationText: '2 tuần',
-    description: 'Hệ tuần hoàn máu cải thiện rõ rệt khắp cơ thể. Các hoạt động thể chất, đi bộ hay chạy bộ bắt đầu ít bị mệt hơn.',
-  },
-  {
-    id: '7',
-    title: 'Chức năng Phổi khỏe mạnh',
-    durationMs: 3 * 30 * 24 * 60 * 60 * 1000,
-    durationText: '3 tháng',
-    description: 'Chức năng lọc và hấp thụ oxy của phổi tăng lên đến 10%. Các triệu chứng ho khan, khò khè giảm rõ rệt.',
-  },
-  {
-    id: '8',
-    title: 'Giảm nguy cơ Bệnh tim',
-    durationMs: 365 * 24 * 60 * 60 * 1000,
-    durationText: '1 năm',
-    description: 'Nguy cơ mắc bệnh tim mạch vành và nhồi máu cơ tim giảm đi một nửa so với thời điểm bạn còn hút thuốc.',
-  },
-  {
-    id: '9',
-    title: 'Ngừa Đột quỵ',
-    durationMs: 5 * 365 * 24 * 60 * 60 * 1000,
-    durationText: '5 năm',
-    description: 'Nguy cơ đột quỵ được giảm thiểu đáng kể, trở lại mức tương đương như một người chưa từng hút thuốc lá.',
-  },
-  {
-    id: '10',
-    title: 'Ngăn ngừa Ung thư Phổi',
-    durationMs: 10 * 365 * 24 * 60 * 60 * 1000,
-    durationText: '10 năm',
-    description: 'Nguy cơ tử vong do ung thư phổi giảm xuống một nửa. Nguy cơ mắc các bệnh ung thư vòm họng, thực quản cũng giảm mạnh.',
-  },
-];
-
-// Reference points used to interpolate overall recovery percentage.
-// Khớp 1-1 với 10 mốc trong HEALTH_MILESTONES — mỗi mốc đạt được sẽ cộng thêm 10%,
-// để biểu đồ donut và 2 hàng "mức thời gian / % đạt được" luôn đồng bộ với danh sách mốc bên dưới.
-const PROGRESS_POINTS = [
-  { x: 0, y: 0, label: '0' },
-  { x: 20 / (60 * 24), y: 10, label: '20 phút' }, // 20 phút
-  { x: 8 / 24, y: 20, label: '8 giờ' }, // 8 giờ
-  { x: 1, y: 30, label: '1 ngày' }, // 24 giờ
-  { x: 2, y: 40, label: '2 ngày' }, // 48 giờ
-  { x: 3, y: 50, label: '3 ngày' }, // 72 giờ
-  { x: 14, y: 60, label: '2 tuần' }, // 2 tuần
-  { x: 90, y: 70, label: '3 tháng' }, // 3 tháng
-  { x: 365, y: 80, label: '1 năm' }, // 1 năm
-  { x: 1825, y: 90, label: '5 năm' }, // 5 năm
-  { x: 3650, y: 100, label: '10 năm' }, // 10 năm
-];
-
-// Các mốc hiển thị thành 2 hàng (thời gian / % đạt được) bên dưới số ngày không hút thuốc.
-const DISPLAY_LEVELS = PROGRESS_POINTS.filter((p) => p.x > 0);
+function getMilestones(t: any): Milestone[] {
+  return [
+    {
+      id: '1',
+      title: t('health.milestones.0.title'),
+      durationMs: 20 * 60 * 1000,
+      durationText: t('health.milestoneLabels.m1'),
+      description: t('health.milestones.0.desc'),
+    },
+    {
+      id: '2',
+      title: t('health.milestones.1.title'),
+      durationMs: 8 * 60 * 60 * 1000,
+      durationText: t('health.milestoneLabels.m2'),
+      description: t('health.milestones.1.desc'),
+    },
+    {
+      id: '3',
+      title: t('health.milestones.2.title'),
+      durationMs: 24 * 60 * 60 * 1000,
+      durationText: t('health.milestoneLabels.m3'),
+      description: t('health.milestones.2.desc'),
+    },
+    {
+      id: '4',
+      title: t('health.milestones.3.title'),
+      durationMs: 48 * 60 * 60 * 1000,
+      durationText: t('health.milestoneLabels.m4'),
+      description: t('health.milestones.3.desc'),
+    },
+    {
+      id: '5',
+      title: t('health.milestones.4.title'),
+      durationMs: 72 * 60 * 60 * 1000,
+      durationText: t('health.milestoneLabels.m5'),
+      description: t('health.milestones.4.desc'),
+    },
+    {
+      id: '6',
+      title: t('health.milestones.5.title'),
+      durationMs: 2 * 7 * 24 * 60 * 60 * 1000,
+      durationText: t('health.milestoneLabels.m6'),
+      description: t('health.milestones.5.desc'),
+    },
+    {
+      id: '7',
+      title: t('health.milestones.6.title'),
+      durationMs: 3 * 30 * 24 * 60 * 60 * 1000,
+      durationText: t('health.milestoneLabels.m7'),
+      description: t('health.milestones.6.desc'),
+    },
+    {
+      id: '8',
+      title: t('health.milestones.7.title'),
+      durationMs: 365 * 24 * 60 * 60 * 1000,
+      durationText: t('health.milestoneLabels.m8'),
+      description: t('health.milestones.7.desc'),
+    },
+    {
+      id: '9',
+      title: t('health.milestones.8.title'),
+      durationMs: 5 * 365 * 24 * 60 * 60 * 1000,
+      durationText: t('health.milestoneLabels.m9'),
+      description: t('health.milestones.8.desc'),
+    },
+    {
+      id: '10',
+      title: t('health.milestones.9.title'),
+      durationMs: 10 * 365 * 24 * 60 * 60 * 1000,
+      durationText: t('health.milestoneLabels.m10'),
+      description: t('health.milestones.9.desc'),
+    },
+  ];
+}
 
 export default function HealthScreen() {
   const { activeScheme } = useTheme();
@@ -230,6 +212,9 @@ export default function HealthScreen() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [nowTime, setNowTime] = useState(Date.now());
   const [chartKey, setChartKey] = useState(0);
+
+  const HEALTH_MILESTONES = getMilestones(t);
+
 
   useFocusEffect(
     useCallback(() => {
@@ -290,6 +275,22 @@ export default function HealthScreen() {
   const timeElapsedMs = Math.max(0, nowTime - quitTimeMs);
   const daysQuit = timeElapsedMs / (1000 * 60 * 60 * 24);
 
+  const PROGRESS_POINTS = [
+    { x: 0, y: 0, label: '0' },
+    { x: 20 / (60 * 24), y: 10, label: t('health.labels.20min') },
+    { x: 8 / 24, y: 20, label: t('health.labels.8h') },
+    { x: 1, y: 30, label: t('health.labels.1day') },
+    { x: 2, y: 40, label: t('health.labels.2day') },
+    { x: 3, y: 50, label: t('health.labels.3day') },
+    { x: 14, y: 60, label: t('health.labels.2week') },
+    { x: 90, y: 70, label: t('health.labels.3month') },
+    { x: 365, y: 80, label: t('health.labels.1year') },
+    { x: 1825, y: 90, label: t('health.labels.5year') },
+    { x: 3650, y: 100, label: t('health.labels.10year') },
+  ];
+
+  const DISPLAY_LEVELS = PROGRESS_POINTS.filter((p) => p.x > 0);
+
   const { width: screenWidth } = Dimensions.get('window');
   const donutRadius = Math.max(56, Math.min((screenWidth - 80) / 3.2, 76));
 
@@ -322,11 +323,11 @@ export default function HealthScreen() {
       const remainingMs = item.durationMs - timeElapsedMs;
       const remainingHours = remainingMs / (1000 * 60 * 60);
       if (remainingHours < 1) {
-        remainingText = `${t('health.minLeft').replace('...', Math.ceil(remainingHours * 60).toString())} ${t('health.min')}`;
+        remainingText = t('health.minLeft').replace('...', Math.ceil(remainingHours * 60).toString()) + ' ' + t('health.min');
       } else if (remainingHours < 24) {
-        remainingText = `${t('health.hourLeft').replace('...', Math.floor(remainingHours).toString())} ${t('health.hour')}`;
+        remainingText = t('health.hourLeft').replace('...', Math.floor(remainingHours).toString()) + ' ' + t('health.hour');
       } else {
-        remainingText = `${t('health.dayLeft').replace('...', Math.floor(remainingHours / 24).toString())} ${t('health.day')}`;
+        remainingText = t('health.dayLeft').replace('...', Math.floor(remainingHours / 24).toString()) + ' ' + t('health.day');
       }
     }
 
