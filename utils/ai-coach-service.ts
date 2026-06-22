@@ -175,6 +175,15 @@ export const saveMessage = async (message: ChatMessage, threadId?: string) => {
 };
 
 export const sendMessageToCoach = async (userMessage: string, context: string): Promise<string> => {
+  // Debug log
+  console.log('DEBUG: GROQ_API_KEY is', GROQ_API_KEY ? 'defined' : 'undefined');
+  console.log('DEBUG: GROQ_API_KEY prefix:', GROQ_API_KEY?.substring(0, 4));
+
+  if (!GROQ_API_KEY) {
+    console.error('AI Coach Error: GROQ_API_KEY is missing!');
+    return "Lỗi cấu hình: Không tìm thấy khóa API.";
+  }
+
   try {
     const response = await fetch(API_URL, {
       method: 'POST',
@@ -194,15 +203,23 @@ export const sendMessageToCoach = async (userMessage: string, context: string): 
       })
     });
 
-    const data = await response.json();
+    // Get the response text regardless of status to debug 401
+    const responseText = await response.text();
+    
+    if (!response.ok) {
+      console.error(`AI Coach API Error: ${response.status} - ${responseText}`);
+      return `Lỗi kết nối API: ${response.status}. Chi tiết: ${responseText.substring(0, 50)}`;
+    }
+
+    const data = JSON.parse(responseText);
     if (data?.choices?.[0]?.message?.content) {
       return data.choices[0].message.content;
     } else {
-      console.error('AI Coach Response Format Error:', JSON.stringify(data));
+      console.error('AI Coach Response Format Error:', responseText);
       return "Xin lỗi, tôi chưa hiểu rõ ý bạn. Bạn có thể nói rõ hơn không?";
     }
   } catch (error) {
-    console.error('AI Coach Error:', error);
+    console.error('AI Coach Network Error:', error);
     return "Xin lỗi, tôi đang gặp chút khó khăn kỹ thuật. Bạn vẫn đang làm rất tốt, hãy hít thở sâu nhé!";
   }
 };
