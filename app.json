@@ -11,8 +11,10 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSMotionUsageDescription": "Ứng dụng cần quyền truy cập chuyển động để đếm bước chân khi bạn chạy bộ."
-      }
+        "NSMotionUsageDescription": "Ứng dụng cần quyền truy cập chuyển động để đếm bước chân khi bạn chạy bộ.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.giakiet.smokeguardai"
     },
     "android": {
       "adaptiveIcon": {

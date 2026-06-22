@@ -37,16 +37,10 @@ const STREAK_ACTIVE_THRESHOLD_DAYS = 3;
 
 // Calculate streak (in days quit) from the quit date
 const calculateStreak = (quitDate: string) => {
-  const quitTime = new Date(quitDate);
-  const now = new Date();
+  const quitTime = new Date(quitDate).getTime();
+  const now = Date.now();
 
-  // Zero out time-of-day so we count full calendar days
-  const quitMidnight = new Date(quitTime);
-  quitMidnight.setHours(0, 0, 0, 0);
-  const nowMidnight = new Date(now);
-  nowMidnight.setHours(0, 0, 0, 0);
-
-  const diffTime = nowMidnight.getTime() - quitMidnight.getTime();
+  const diffTime = now - quitTime;
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
   return Math.max(0, diffDays);
