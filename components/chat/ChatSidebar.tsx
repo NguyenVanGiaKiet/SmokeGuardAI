@@ -131,7 +131,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         },
                       ]}
                     >
-                      {item.title}
+                      {t(item.title)}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity

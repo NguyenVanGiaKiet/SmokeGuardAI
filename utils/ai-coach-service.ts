@@ -37,7 +37,7 @@ const migrateIfNeeded = async (): Promise<ChatThread[]> => {
     const firstMsg = legacyHistory[0];
     const lastMsg = legacyHistory[legacyHistory.length - 1];
     
-    let title = 'Cuộc trò chuyện cũ';
+    let title = 'coach.oldChat';
     if (firstMsg && firstMsg.text) {
       title = firstMsg.text.substring(0, 30) + (firstMsg.text.length > 30 ? '...' : '');
     }
@@ -82,7 +82,7 @@ export const createThread = async (title?: string): Promise<ChatThread> => {
     const threads = await getThreads();
     const newThread: ChatThread = {
       id: Date.now().toString(),
-      title: title || 'Cuộc trò chuyện mới',
+      title: title || 'coach.newChat',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -152,9 +152,9 @@ export const saveMessage = async (message: ChatMessage, threadId?: string) => {
     if (threadIndex > -1) {
       threads[threadIndex].updatedAt = new Date().toISOString();
       
-      // If the title is 'Cuộc trò chuyện mới' and user sent the message, let's update the title
+      // If the title is 'coach.newChat' and user sent the message, let's update the title
       if (
-        (threads[threadIndex].title === 'Cuộc trò chuyện mới' || threads[threadIndex].title === '') &&
+        (threads[threadIndex].title === 'coach.newChat' || threads[threadIndex].title === '') &&
         message.role === 'user'
       ) {
         threads[threadIndex].title = message.text.substring(0, 30) + (message.text.length > 30 ? '...' : '');

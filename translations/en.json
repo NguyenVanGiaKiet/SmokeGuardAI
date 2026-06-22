@@ -151,6 +151,7 @@
     "inputPlaceholder": "Message AI Coach...",
     "sidebarTitle": "Chat History",
     "newChat": "New Chat",
+    "oldChat": "Old Conversation",
     "noChats": "No conversations yet"
   },
   "health": {
